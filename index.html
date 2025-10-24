@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>3in1 號碼鍵盤</title>
+<style>
+body { font-family:"Noto Sans TC",sans-serif; text-align:center; margin-top:20px; background:#fafafa; }
+.row { display:flex; justify-content:center; margin:6px 0; }
+.btn { width:55px; height:55px; border-radius:50%; border:2px solid #000; margin:4px; font-size:18px; font-weight:bold; cursor:pointer; background:white; color:black; }
+.btn:hover:not(.used) { background:#f0f0f0; }
+.btn.used { background:gray; color:white; cursor:not-allowed; }
+#funcRow { display:flex; justify-content:space-between; width:700px; margin:0 auto; }
+#displayArea { display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; margin:10px auto 0; width:700px; min-height:60px; border:2px solid #000; padding:5px; background:#fff; font-size:20px; font-weight:bold; text-align:left; border-radius:12px; }
+.circle {
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  border:2px solid red;
+  background:red;
+  color:white;
+  margin:2px;
+  font-size:32px; /* 放大文字 */
+  font-weight:bold;
+  text-align:center;
+  line-height:50px;
+}
+  table { border-collapse: collapse; width: 75%; margin-bottom: 5px; }
+  td { border: 1px solid #ccc; padding: 5px 5px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- 第一行：號碼鍵 -->
+<div id="numRow" class="row"></div>
+
+<!-- 第二行：功能鍵 -->
+<div id="funcRow">
+  <button class="btn" id="cancelBtn">取消</button>
+  <div>
+    <button class="btn" id="fourBtn">四</button>
+    <button class="btn" id="threeBtn">三</button>
+    <button class="btn" id="twoBtn">二</button>
+    <button class="btn" id="carBtn">坐車</button>
+    <button class="btn" id="okBtn">OK</button>
+    <button class="btn" id="xBtn">ㄨ</button>
+  </div>
+  <button class="btn" id="switchBtn">切換</button>
+</div>
+
+<!-- 顯示行 -->
+<div id="displayArea"></div>
+
+<script>
+const numRow=document.getElementById("numRow");
+const displayArea=document.getElementById("displayArea");
+const cancelBtn=document.getElementById("cancelBtn");
+const switchBtn=document.getElementById("switchBtn");
+const fourBtn=document.getElementById("fourBtn");
+const threeBtn=document.getElementById("threeBtn");
+const twoBtn=document.getElementById("twoBtn");
+const xBtn=document.getElementById("xBtn");
+const carBtn=document.getElementById("carBtn");
+const okBtn=document.getElementById("okBtn");
+
+let currentSet=0;
+let usedNumbers=new Set();
+let currentRow=[];
+let rows=[];
+
+// 四組號碼循環
+const numberGroups=[
+  ["00","01","02","03","04","05","06","07","08","09"],
+  ["10","11","12","13","14","15","16","17","18","19"],
+  ["20","21","22","23","24","25","26","27","28","29"],
+  ["30","31","32","33","34","35","36","37","38","39"]
+];
+
+// 渲染號碼鍵
+function renderNumbers(){
+  numRow.innerHTML="";
+  let nums=numberGroups[currentSet];
+  nums.forEach(numStr=>{
+    const btn=document.createElement("button");
+    btn.className="btn";
+    btn.textContent=numStr;
+    if(numStr==="00") btn.classList.add("used");
+    if(usedNumbers.has(numStr)) btn.classList.add("used");
+    btn.onclick=()=>clickCircle(numStr,btn);
+    numRow.appendChild(btn);
+  });
+}
+
+// 計算連續○
+function countConsecutiveCircle(){
+  let count=0;
+  for(let i=currentRow.length-1;i>=0;i--){
+    if(currentRow[i].type==="○") count++;
+    else break;
+  }
+  return count;
+}
+
+// 點 ○
+function clickCircle(numStr,btn){
+  if(countConsecutiveCircle()>=6) return alert("連續○不得超過6個");
+  btn.classList.add("used");
+  usedNumbers.add(numStr);
+  currentRow.push({type:"○",value:numStr});
+  renderDisplay();
+}
+
+// 點 ㄨ
+function clickX(){
+  let xCount=currentRow.filter(c=>c.type==="ㄨ").length;
+  if(xCount>=5) return alert("ㄨ總數不得超過5");
+  let prev=currentRow.length?currentRow[currentRow.length-1].type:null;
+  if(prev==="ㄨ") return alert("ㄨ+ㄨ⛔️");
+  if(prev==="☆") return alert("☆+ㄨ⛔️");
+  currentRow.push({type:"ㄨ",value:"ㄨ"});
+  renderDisplay();
+}
+
+// 點 ☆
+function clickStar(star){
+  let xCount=currentRow.filter(c=>c.type==="ㄨ").length;
+  let area = xCount + 1; // 區數
+  let starNum = parseInt(star);
+  if(starNum<2 || starNum>Math.min(area,4)) return alert(`區數=${area}，不能選${star}星`);
+  let prev = currentRow.length ? currentRow[currentRow.length-1].type : null;
+  if(prev==="ㄨ") return alert("ㄨ+☆⛔️");
+
+  let lastIndex=-1;
+  for(let i=currentRow.length-1;i>=0;i--){
+    if(currentRow[i].type==="☆" && currentRow[i].value.startsWith(star)){
+      lastIndex=i;
+      break;
+    }
+  }
+  if(lastIndex===-1){
+    currentRow.push({type:"☆", value: star+" X 1"});
+  } else {
+    let match=currentRow[lastIndex].value.match(/X (\d+)/);
+    let n=match ? parseInt(match[1]) : 0;
+    currentRow[lastIndex].value = star + " X " + (n+1);
+  }
+  renderDisplay();
+}
+
+// 顯示行
+function renderDisplay(){
+  displayArea.innerHTML="";
+  rows.concat([currentRow]).forEach(r=>{
+    r.forEach(c=>{
+      let div=document.createElement("div");
+      if(c.type==="○"){ 
+        div.className="circle"; 
+        div.textContent=c.value;
+      } else if(c.type==="ㄨ"){ 
+        div.style.display="inline-block";
+        div.style.width="55px";
+        div.style.textAlign="center";
+        div.style.fontWeight="bold";
+        div.style.fontSize="18px";
+        div.textContent="ㄨ";
+      } else if(c.type==="☆"){ 
+        div.style.display="inline-block";
+        div.style.width="116px"; // 兩個○寬度
+        div.style.textAlign="center";
+        div.style.fontWeight="bold";
+        div.style.fontSize="18px";
+        div.textContent = c.value;
+      } else if(c.type==="坐車"){
+        div.style.display="inline-block";
+        div.style.width="116px";
+        div.style.textAlign="center";
+        div.style.fontWeight="bold";
+        div.style.fontSize="18px";
+        div.textContent = c.value.replace("×"," X ");
+      }
+      displayArea.appendChild(div);
+    });
+  });
+}
+
+// 功能鍵
+switchBtn.onclick=()=>{ currentSet=(currentSet+1)%4; renderNumbers(); }
+xBtn.onclick=clickX;
+twoBtn.onclick=()=>clickStar("2");
+threeBtn.onclick=()=>clickStar("3");
+fourBtn.onclick=()=>clickStar("4");
+
+// 取消
+cancelBtn.onclick=()=>{
+  if(currentRow.length>0){
+    let last=currentRow.pop();
+    if(last.type==="○") usedNumbers.delete(last.value);
+    renderNumbers();
+    renderDisplay();
+  } else if(rows.length>0){
+    currentRow=rows.pop();
+    renderDisplay();
+  }
+};
+
+// OK
+okBtn.onclick=()=>{
+  if(currentRow.length===0) return alert("尚未輸入任何元素");
+  rows.push([...currentRow]);
+  currentRow=[];
+  renderDisplay();
+  renderNumbers();
+};
+
+// 坐車
+carBtn.onclick=()=>{
+  let circleCount=currentRow.filter(c=>c.type==="○").length;
+  if(circleCount!==1) return alert("行內僅有一個○才能坐車！");
+  currentRow.push({type:"坐車",value:"坐車 X 1"});
+  okBtn.onclick();
+};
+
+// 初始渲染
+renderNumbers();
+</script>
+
+<div>
+	<table id="dataTable">
+
+  <tbody>
+<tr><td>2025/10/11</td><td>六</td><td>04</td><td>09</td><td>19</td><td>22</td><td>34</td></tr>
+<tr><td>2025/10/10</td><td>五</td><td>03</td><td>06</td><td>24</td><td>31</td><td>36</td></tr>
+<tr><td>2025/10/09</td><td>四</td><td>02</td><td>04</td><td>12</td><td>15</td><td>29</td></tr>
+<tr><td>2025/10/08</td><td>三</td><td>03</td><td>09</td><td>26</td><td>38</td><td>39</td></tr>
+<tr><td>2025/10/07</td><td>二</td><td>01</td><td>16</td><td>20</td><td>28</td><td>34</td></tr>
+<tr><td>2025/10/06</td><td>一</td><td>03</td><td>05</td><td>06</td><td>12</td><td>13</td></tr>
+<tr><td>2025/10/04</td><td>六</td><td>03</td><td>04</td><td>10</td><td>18</td><td>39</td></tr>
+<tr><td>2025/10/03</td><td>五</td><td>10</td><td>16</td><td>19</td><td>21</td><td>28</td></tr>
+<tr><td>2025/10/02</td><td>四</td><td>10</td><td>19</td><td>25</td><td>36</td><td>39</td></tr>
+<tr><td>2025/10/01</td><td>三</td><td>03</td><td>05</td><td>12</td><td>22</td><td>27</td></tr>
+
+
+</tbody>
+</table>
+</div>
+</body>
+</html>

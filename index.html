@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>539 分析儀 - 置頂連網版</title>
+  <title>539 分析儀 - 雲端自動版</title>
   <style>
     body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
     .container { display:flex; background:#000; padding:10px; }
@@ -25,15 +25,15 @@
 </div>
 
 <script>
-// --- 機關：自動載入 2025.js ---
+// --- 機關：這幾行就是自動連線到 2025.js 的秘密 ---
 let rawData = [];
 const yearFreq = [31,37,37,48,41,40,56,44,41,37,42,46,37,49,32,30,27,37,41,36,39,43,39,52,36,47,53,46,42,35,44,34,34,34,39,38,36,46,39];
 
-function loadCloud() {
+function loadData() {
     const s = document.createElement('script');
-    s.src = "2025.js?v=" + Date.now(); // 抓數據
+    s.src = "2025.js?v=" + Date.now(); // 這裡在抓你的光碟片
     s.onload = () => {
-        if (typeof AllHistoryData !== 'undefined') { // 對齊你的大寫 A
+        if (typeof AllHistoryData !== 'undefined') { // 對齊大寫 A
             rawData = AllHistoryData;
             sync();
         }
@@ -58,14 +58,13 @@ const gameDates = getGameDates(100);
 function draw() {
   if (rawData.length === 0) return;
   const showDays = n_multiplier * 6;
-  const pad = {l:90, r:40, t:15, b:85};
-  c.height = 600 + 100; c.width = 900 + 120;
+  const pad = {l:90, r:40, t:15, b:85}; // 這裡把畫面往上提了
+  c.height = 700; c.width = 1020;
   const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
   const cw = w / 39, rh = h / showDays;
 
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-  // 藍條與數字
   for(let i=0; i<39; i++) {
     const x = pad.l + i*cw;
     let v = yearFreq[i] || 0;
@@ -81,13 +80,11 @@ function draw() {
     ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+30);
   }
 
-  // 紅綠十字閃爍
   if(blink) {
     ctx.strokeStyle='#f00'; ctx.strokeRect(pad.l, pad.t+blinkRow*rh, w, rh);
     ctx.strokeStyle='#0f0'; ctx.strokeRect(pad.l+blinkCol*cw, pad.t, cw, h);
   }
 
-  // 歷史點
   for(let r=0; r<showDays; r++) {
     const y = pad.t + r*rh + rh/2;
     ctx.fillStyle = (r===blinkRow && blink) ? '#f00' : '#666';
@@ -105,12 +102,18 @@ function draw() {
   }
 }
 
-function sync(){ document.getElementById('val-days').textContent=n_multiplier*6; document.getElementById('val-updown').textContent=blinkRow; document.getElementById('val-leftright').textContent=blinkCol; draw(); }
+function sync(){ 
+  document.getElementById('val-days').textContent=n_multiplier*6; 
+  document.getElementById('val-updown').textContent=blinkRow; 
+  document.getElementById('val-leftright').textContent=blinkCol; 
+  draw(); 
+}
+
 setInterval(()=>{ blink=!blink; draw(); }, 400);
 document.getElementById('days-inc').onclick=()=>{ n_multiplier=n_multiplier>=10?1:n_multiplier+1; sync(); };
 document.getElementById('updown-inc').onclick=()=>{ blinkRow=(blinkRow+1)%(n_multiplier*6); sync(); };
 document.getElementById('leftright-inc').onclick=()=>{ blinkCol=(blinkCol+1)%39; sync(); };
-loadCloud();
+loadData(); // 啟動抓取資料
 </script>
 </body>
 </html>

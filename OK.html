@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>539 加大分析 - 最終版</title>
+  
   <script src="https://lumingxian88com.github.io/8888/2025.js"></script>
+  
   <style>
     body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
     .header { background:#111; padding:15px; border-bottom:2px solid #f00; display:flex; justify-content:space-around; align-items:center; }
@@ -12,7 +14,7 @@
     .main-area { flex-grow:1; display:flex; }
     canvas { background:#000; flex-grow:1; }
     .controls { width:140px; background:#111; padding:15px; display:flex; flex-direction:column; gap:15px; border-left:1px solid #333; }
-    button { padding:20px 5px; background:#444; color:#fff; border:2px solid #f00; border-radius:10px; font-size:22px; font-weight:bold; cursor:pointer; }
+    button { padding:20px 5px; background:#444; color:#fff; border:1px solid #f00; border-radius:10px; font-size:22px; font-weight:bold; cursor:pointer; }
     .val-display { font-size:28px; color:#0f0; text-align:center; font-weight:bold; }
   </style>
 </head>
@@ -34,7 +36,81 @@
 </div>
 
 <script>
+// 你之前給我的基礎頻率
 const baseN39 = [31,37,37,48,42,40,56,45,41,39,44,47,38,49,32,30,27,37,41,36,39,43,39,53,36,48,54,46,43,35,44,34,35,34,40,38,37,30,35];
+
+window.onload = function() {
+    // 檢查 rawData 是否成功載入
+    if (typeof rawData === 'undefined') {
+        document.getElementById('res-list').innerHTML = "<span style='color:red'>連線失敗，請檢查 2025.js</span>";
+        return;
+    }
+    
+    // 計算邏輯：基礎次數 + 歷史號碼出現次數
+    let currentFreq = [...baseN39];
+    rawData.forEach(draw => {
+        draw.forEach(numStr => {
+            let n = parseInt(numStr);
+            if(n >= 1 && n <= 39) currentFreq[n-1]++;
+        });
+    });
+
+    // 排序並找出最強前 5 名
+    let top5 = currentFreq.map((v, i) => ({n: i + 1, v: v}))
+                          .sort((a, b) => b.v - a.v).slice(0, 5);
+    
+    // 顯示號碼
+    document.getElementById('res-list').innerHTML = top5.map(x => 
+        `<span class="best-num">${x.n.toString().padStart(2,'0')}</span>`).join('');
+
+    // 畫圖
+    startChart(currentFreq, rawData);
+};
+
+function startChart(freqData, raw) {
+    const c = document.getElementById('chart'), ctx = c.getContext('2d');
+    let mult = 1, blink = true;
+
+    function draw() {
+        c.width = window.innerWidth - 140; c.height = window.innerHeight - 80;
+        const days = mult * 6, pad = {l:60, r:20, t:30, b:50};
+        const w = c.width-pad.l-pad.r, h = c.height-pad.t-pad.b;
+        const cw = w/39, rh = h/days;
+        
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
+        
+        // 畫頻率條
+        freqData.forEach((v, i) => {
+            const x = pad.l + i*cw;
+            let barH = (v / (Math.max(...freqData) + 5)) * h;
+            ctx.fillStyle = blink ? 'rgba(0,180,255,0.4)' : 'rgba(0,180,255,0.1)';
+            ctx.fillRect(x+1, pad.t + h - barH, cw-2, barH);
+            ctx.fillStyle = '#666'; ctx.font='12px Arial'; ctx.textAlign='center';
+            ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 20);
+        });
+
+        // 畫紅點
+        for(let r=0; r<days; r++) {
+            if(raw[r]) {
+                const y = pad.t + r*rh + rh/2;
+                raw[r].forEach(nStr => {
+                    ctx.beginPath();
+                    ctx.arc(pad.l + (parseInt(nStr)-1)*cw + cw/2, y, Math.min(cw, rh)/2.5, 0, Math.PI*2);
+                    ctx.fillStyle = blink ? '#f00' : '#444'; ctx.fill();
+                });
+            }
+        }
+    }
+
+    setInterval(() => { blink = !blink; draw(); }, 500);
+    document.getElementById('btn-inc').onclick = () => { mult = mult>=10?1:mult+1; document.getElementById('val-days').textContent=mult*6; draw(); };
+    document.getElementById('btn-dec').onclick = () => { mult = mult<=1?10:mult-1; document.getElementById('val-days').textContent=mult*6; draw(); };
+    window.onresize = draw;
+    draw();
+}
+</script>
+</body>
+</html>
 
 window.onload = function() {
     if (typeof rawData === 'undefined') {

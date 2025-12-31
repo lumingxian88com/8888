@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>539 全自動加大分析儀</title>
+  <style>
+    body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+    .status-bar { background:#222; padding:8px 15px; font-size:14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #444; }
+    .dot { width:12px; height:12px; border-radius:50%; display:inline-block; }
+    .dot-blue { background: #007bff; box-shadow: 0 0 8px #007bff; }
+    .dot-green { background: #28a745; box-shadow: 0 0 8px #28a745; }
+    .dot-red { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
+    .header { background:#111; padding:15px; border-bottom:2px solid #f00; display:flex; justify-content:space-around; align-items:center; }
+    .best-box { border: 2px solid #ff0; background: #220; padding:10px; border-radius:10px; text-align:center; min-width:180px; box-shadow: 0 0 15px rgba(255,255,0,0.5); }
+    .best-num { color: #f00; font-size: 38px; font-weight: bold; display: inline-block; margin: 0 10px; text-shadow: 0 0 12px #f00; }
+    .main-area { flex-grow:1; display:flex; position:relative; }
+    canvas { background:#000; flex-grow:1; }
+    .controls { width:140px; background:#111; padding:15px; display:flex; flex-direction:column; gap:20px; border-left:1px solid #333; }
+    button { padding:20px 5px; background:#333; color:#fff; border:2px solid #f00; border-radius:10px; font-size:22px; font-weight:bold; cursor:pointer; }
+    .val-display { font-size:32px; color:#0f0; text-align:center; font-weight:bold; }
+  </style>
+</head>
+<body>
+
+<div class="status-bar">
+    <span id="status-dot" class="dot dot-blue"></span>
+    <span id="status-text">雲端數據讀取中...</span>
+</div>
+
+<div class="header">
+    <div style="color:#aaa; font-size:18px; font-weight:bold;">🎯 今日最強 5 紅點</div>
+    <div id="res-list" class="best-box">--</div>
+</div>
+
+<div class="main-area">
+    <canvas id="chart"></canvas>
+    <div class="controls">
+        <div style="font-size:14px;color:#888;text-align:center;">天數倍率</div>
+        <div id="val-days" class="val-display">6</div>
+        <button id="btn-inc">加大 ▲</button>
+        <button id="btn-dec">縮小 ▼</button>
+    </div>
+</div>
+
+<script>
+// 你提供的基礎頻次數據
+const n39Base = [31,37,37,48,42,40,56,45,41,39,44,47,38,49,32,30,27,37,41,36,39,43,39,53,36,48,54,46,43,35,44,34,35,34,40,38,37];
+
+function loadData() {
+    const script = document.createElement('script');
+    // 自動指向你的 GitHub 數據檔案
+    script.src = "https://lumingxian88com.github.io/8888/2025.js?v=" + Date.now();
+    
+    script.onload = () => {
+        if (typeof rawData !== 'undefined') {
+            document.getElementById('status-dot').className = 'dot dot-green';
+            document.getElementById('status-text').innerText = '連線成功！數據已同步';
+            start(rawData);
+        }
+    };
+    script.onerror = () => {
+        document.getElementById('status-dot').className = 'dot dot-red';
+        document.getElementById('status-text').innerText = '連線失敗，請檢查 2025.js';
+    };
+    document.head.appendChild(script);
+}
+
+function start(data) {
+    let freqs = [...n39Base];
+    // 自動累加歷史號碼
+    data.forEach(d => d.forEach(num => { let n = parseInt(num); if(n<=39) freqs[n-1]++; }));
+
+    // 找出前 5 名
+    let top = freqs.map((v,i)=>({n:i+1, v:v})).sort((a,b)=>b.v-a.v).slice(0,5);
+    document.getElementById('res-list').innerHTML = top.map(x => `<span class="best-num">${x.n.toString().padStart(2,'0')}</span>`).join('');
+
+    initChart(freqs, data);
+}
+
+function initChart(freqData, raw) {
+    const c = document.getElementById('chart'), ctx = c.getContext('2d');
+    let mult = 1, blink = true;
+    function draw() {
+        c.width = window.innerWidth - 140; c.height = window.innerHeight - 100;
+        const days = mult * 6, pad = {l:60, r:20, t:30, b:50}, w = c.width-pad.l-pad.r, h = c.height-pad.t-pad.b, cw = w/39, rh = h/days;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
+        freqData.forEach((v, i) => {
+            const x = pad.l + i*cw;
+            let barH = (v / (Math.max(...freqData) + 5)) * h;
+            ctx.fillStyle = blink ? 'rgba(0,180,255,0.4)' : 'rgba(0,180,255,0.1)';
+            ctx.fillRect(x+1, pad.t + h - barH, cw-2, barH);
+            ctx.fillStyle = '#666'; ctx.font='12px Arial'; ctx.textAlign='center';
+            ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 20);
+        });
+        for(let r=0; r<days; r++) {
+            if(raw[r]) raw[r].forEach(nStr => {
+                ctx.beginPath();
+                ctx.arc(pad.l + (parseInt(nStr)-1)*cw + cw/2, pad.t+r*rh+rh/2, Math.min(cw, rh)/2.5, 0, Math.PI*2);
+                ctx.fillStyle = blink ? '#f00' : '#444'; ctx.fill();
+            });
+        }
+    }
+    setInterval(() => { blink = !blink; draw(); }, 500);
+    document.getElementById('btn-inc').onclick = () => { mult = mult>=10?1:mult+1; document.getElementById('val-days').textContent=mult*6; draw(); };
+    document.getElementById('btn-dec').onclick = () => { mult = mult<=1?10:mult-1; document.getElementById('val-days').textContent=mult*6; draw(); };
+    window.onresize = draw;
+    draw();
+}
+loadData();
+</script>
+</body>
+</html>

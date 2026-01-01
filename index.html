@@ -2,25 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>6線精準對位版</title>
+  <title>6線20-60死對位</title>
   <style>
     body { margin:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family: monospace; }
-    .container { display:flex; background:#000; }
-    canvas { border:1px solid #333; }
-    .panel { width:60px; background:#111; padding:5px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:10px; }
-    .group { background:#1a1a1a; padding:5px; text-align:center; }
-    button { width:100%; padding:10px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:20px; font-weight:700; }
-    .value { font-size:20px; color:#0f0; font-weight:700; margin:5px 0; border:1px solid #fff; }
-    .label { font-size:14px; color:#888; }
+    .container { display:flex; background:#000; border:1px solid #444; }
+    canvas { background:#000; }
+    .panel { width:80px; background:#111; padding:10px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:15px; }
+    .group { background:#1a1a1a; padding:10px 5px; text-align:center; border-radius:4px; }
+    button { width:100%; padding:12px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:22px; font-weight:bold; }
+    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; }
+    .label { font-size:16px; color:#888; }
   </style>
 </head>
 <body>
 <div class="container">
   <canvas id="chart"></canvas>
   <div class="panel">
-    <div class="group"><div class="label">天數</div><button id="n-inc">▲</button><div id="val-n" class="value">6</div><button id="n-dec">▼</button></div>
-    <div class="group"><div class="label">紅閃</div><button id="r-inc">▲</button><div id="val-r" class="value">1</div><button id="r-dec">▼</button></div>
-    <div class="group"><div class="label">綠閃</div><button id="c-inc">▲</button><div id="val-c" class="value">1</div><button id="c-dec">▼</button></div>
+    <div class="group"><div class="label">紅線</div><button id="r-inc">▲</button><div id="val-r" class="value">1</div><button id="r-dec">▼</button></div>
+    <div class="group"><div class="label">綠線</div><button id="c-inc">▲</button><div id="val-c" class="value">1</div><button id="c-dec">▼</button></div>
   </div>
 </div>
 
@@ -31,66 +30,68 @@ let blinkRow = 0, blinkCol = 0, blink = true;
 
 function draw() {
   c.height = 600; c.width = 900;
-  const pad = {l:100, r:40, t:50, b:80};
+  const pad = {l:120, r:40, t:60, b:80};
   const w = c.width - pad.l - pad.r;
   const h = c.height - pad.t - pad.b;
   const cw = w / 39;
-  const rh = h / 5; // 6條線產生5個間隔
+  const rh = h / 5; // 6條線產生5個等分間距
 
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-  // 1. 繪製 6 條橫線與死對位次數
+  // 【核心：畫出六條橫線並對齊次數】
   for(let i=0; i<6; i++) {
     let y = pad.t + i * rh;
-    // 計算分攤次數：從 60 到 20，每步差 8 (40/5=8)
-    let countVal = 60 - (i * 8);
+    // 第1條(i=0)是60，第6條(i=5)是20
+    let countVal = 60 - (i * 8); 
 
-    // 橫線
-    ctx.strokeStyle = (i===0 || i===5) ? '#f00' : '#444';
-    ctx.lineWidth = (i===0 || i===5) ? 2 : 1;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+w, y); ctx.stroke();
+    // 1. 繪製橫線
+    ctx.strokeStyle = (i === 0 || i === 5) ? '#f00' : '#444';
+    ctx.lineWidth = (i === 0 || i === 5) ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
 
-    // 次數左切齊 (60, 52, 44, 36, 28, 20)
-    ctx.fillStyle = (i===0 || i===5) ? '#f00' : '#fff';
-    ctx.font = 'bold 24px Arial'; ctx.textAlign = 'right';
-    ctx.fillText(countVal, pad.l - 20, y + 9);
+    // 2. 左邊標註次數 (60, 52, 44, 36, 28, 20)
+    ctx.fillStyle = (i === 0 || i === 5) ? '#f00' : '#fff';
+    ctx.font = 'bold 28px Arial'; 
+    ctx.textAlign = 'right';
+    ctx.fillText(countVal, pad.l - 20, y + 10);
 
-    // 天數標記 (1, 2, 3, 4, 5, 6)
-    ctx.fillStyle = '#888'; ctx.font = '14px Arial';
-    ctx.fillText("Day " + (i+1), pad.l - 65, y + 6);
+    // 3. 左邊標註天數 (第1天到第6天)
+    ctx.fillStyle = '#666'; 
+    ctx.font = '14px Arial'; 
+    ctx.fillText("Day " + (i+1), pad.l - 85, y + 5);
   }
 
-  // 2. 底部 01-39 號碼
+  // 底部號碼 (01-39)
   for(let i=0; i<39; i++) {
-    const x = pad.l + i*cw;
+    const x = pad.l + i * cw;
     ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#555';
-    ctx.font = 'bold 16px Arial'; ctx.textAlign='center';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+40);
+    ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 45);
   }
 
-  // 3. 閃爍交叉
+  // 閃爍掃描線
   if(blink) {
     const tx = pad.l + blinkCol * cw + cw/2;
     const ty = pad.t + blinkRow * rh;
     ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(tx, pad.t); ctx.lineTo(tx, pad.t+h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx, pad.t); ctx.lineTo(tx, pad.t + h); ctx.stroke();
     ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(pad.l+w, ty); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(pad.l + w, ty); ctx.stroke();
   }
 }
 
 // 循環邏輯
-document.getElementById('r-inc').onclick=()=>{ blinkRow = (blinkRow + 1) % 6; sync(); };
-document.getElementById('r-dec').onclick=()=>{ blinkRow = (blinkRow - 1 + 6) % 6; sync(); };
-document.getElementById('c-inc').onclick=()=>{ blinkCol = (blinkCol + 1) % 39; sync(); };
-document.getElementById('c-dec').onclick=()=>{ blinkCol = (blinkCol - 1 + 39) % 39; sync(); };
+document.getElementById('r-inc').onclick = () => { blinkRow = (blinkRow + 1) % 6; sync(); };
+document.getElementById('r-dec').onclick = () => { blinkRow = (blinkRow - 1 + 6) % 6; sync(); };
+document.getElementById('c-inc').onclick = () => { blinkCol = (blinkCol + 1) % 39; sync(); };
+document.getElementById('c-dec').onclick = () => { blinkCol = (blinkCol - 1 + 39) % 39; sync(); };
 
-function sync(){ 
+function sync() { 
   document.getElementById('val-r').textContent = blinkRow + 1;
   document.getElementById('val-c').textContent = blinkCol + 1;
   draw(); 
 }
-setInterval(()=>{ blink=!blink; draw(); }, 400);
+setInterval(() => { blink = !blink; draw(); }, 400);
 sync();
 </script>
 </body>

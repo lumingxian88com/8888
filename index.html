@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 戰略終端 - 橫豎同步版</title>
+    <title>539 戰略終端 - 標尺左切齊版</title>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: monospace; overflow: hidden; display: flex; }
         #canvas-wrap { flex: 1; height: 100vh; position: relative; }
@@ -59,18 +59,31 @@ let mulD = 6, sR = 0, sC = 0, obs = [10, 22, 7, 1, 2, 3], blk = true, isRunning 
 
 function render() {
     cvs.width = window.innerWidth - 230; cvs.height = window.innerHeight;
-    const p = {l: 85, r: 35, t: 15, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
+    const p = {l: 95, r: 35, t: 15, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
     const cw = W / 39, rh = H / 60;
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
+
+    // 繪製頂部次數標籤 (60, 20)
+    ctx.fillStyle = '#f00'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'right';
+    ctx.fillText("60", p.l-15, p.t+22);
+    ctx.fillText("20", p.l-15, p.t+59*rh+5);
 
     for(let r=0; r<=60; r++) {
         let y = p.t + r * rh, isStp = (r > 0 && r % 6 === 0);
         ctx.strokeStyle = isStp ? '#f00' : (r < mulD ? '#222' : '#0a0a0a');
         ctx.lineWidth = isStp ? 2 : 1;
         ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l+W, y); ctx.stroke();
-        if(isStp){ ctx.fillStyle='#f00'; ctx.font='bold 14px Arial'; ctx.textAlign='right'; ctx.fillText(r, p.l-45, y+5); }
+        
+        // 修正標記對齊：讓 6, 12, 18 與上面的 60, 20 左切齊
+        if(isStp){ 
+            ctx.fillStyle='#f00'; 
+            ctx.font='bold 14px Arial'; 
+            ctx.textAlign='right'; 
+            ctx.fillText(r.toString().padStart(2,'0'), p.l-15, y+5); 
+        }
+        
         if(r < mulD) {
-            ctx.fillStyle='#555'; ctx.font='11px Arial'; ctx.textAlign='right'; ctx.fillText(dates[r]||"", p.l-10, y+5);
+            ctx.fillStyle='#555'; ctx.font='11px Arial'; ctx.textAlign='right'; ctx.fillText(dates[r]||"", p.l-45, y+5);
             if(D[r]) D[r].forEach(n => {
                 let x=p.l+(n-1)*cw+cw/2, isO=obs.includes(n), active=(r===sR&&n-1===sC&&blk);
                 ctx.fillStyle=active?'#fff':(isO?'#00dfff':(n-1===sC&&blk?'#f00':'#400000'));
@@ -80,7 +93,6 @@ function render() {
             });
         }
     }
-    // 橫豎同步閃爍線
     if(blk) {
         ctx.strokeStyle='#0f0'; ctx.lineWidth=1;
         ctx.beginPath(); ctx.moveTo(p.l+sC*cw+cw/2, p.t); ctx.lineTo(p.l+sC*cw+cw/2, p.t+60*rh); ctx.stroke();

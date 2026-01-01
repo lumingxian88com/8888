@@ -3,38 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>539 分析儀 - 專業對齊版</title>
+  <title>539 分析儀 - 終極精準對齊版</title>
   <style>
     body { margin:0; background:#000; color:#fff; font-family:sans-serif; overflow:hidden; display:flex; }
     #chart-container { flex-grow: 1; height: 100vh; position: relative; }
     canvas { background:#000; display: block; }
     .side-panel { 
-        width:160px; background:#111; padding:15px; border-left:2px solid #f00; 
-        display:flex; flex-direction:column; gap:12px; height: 100vh; flex-shrink: 0; box-sizing: border-box;
+        width:160px; background:#111; padding:10px; border-left:2px solid #f00; 
+        display:flex; flex-direction:column; gap:8px; height: 100vh; flex-shrink: 0; box-sizing: border-box;
     }
-    .ctrl-group { background:#1a1a1a; border:1px solid #333; padding:10px; border-radius:10px; text-align:center; }
-    button { width:100%; padding:12px; margin:5px 0; background:#333; color:#fff; border:1px solid #f00; border-radius:8px; cursor:pointer; font-size:18px; font-weight:bold; }
-    .val-text { font-size:26px; color:#0f0; font-weight:bold; }
-    .label-text { font-size:12px; color:#888; }
+    .ctrl-group { background:#1a1a1a; border:1px solid #333; padding:8px; border-radius:10px; text-align:center; }
+    button { width:100%; padding:10px; margin:4px 0; background:#333; color:#fff; border:1px solid #f00; border-radius:6px; cursor:pointer; font-size:16px; font-weight:bold; }
+    .val-text { font-size:24px; color:#0f0; font-weight:bold; line-height: 1.2; }
+    .label-text { font-size:11px; color:#888; margin-bottom:2px; }
   </style>
 </head>
 <body>
 <div id="chart-container"><canvas id="chart"></canvas></div>
 <div class="side-panel">
     <div class="ctrl-group">
-        <div class="label-text">天數 (6-60)</div>
+        <div class="label-text">顯示天數</div>
         <div id="val-days" class="val-text">6</div>
         <button onclick="changeDays(1)">天數 ▲</button>
         <button onclick="changeDays(-1)">天數 ▼</button>
     </div>
     <div class="ctrl-group">
-        <div class="label-text">紅閃 (日期)</div>
+        <div class="label-text">紅色閃爍線</div>
         <div id="val-updown" class="val-text">1</div>
         <button onclick="changeRow(1)">日期 ▲</button>
         <button onclick="changeRow(-1)">日期 ▼</button>
     </div>
     <div class="ctrl-group">
-        <div class="label-text">綠閃 (號碼)</div>
+        <div class="label-text">綠色號碼軌</div>
         <div id="val-leftright" class="val-text">01</div>
         <button onclick="changeCol(1)">號碼 ▲</button>
         <button onclick="changeCol(-1)">號碼 ▼</button>
@@ -50,60 +50,93 @@ let n_mult = 1, blinkRow = 0, blinkCol = 0, blink = true;
 
 function draw() {
     c.width = window.innerWidth - 160; c.height = window.innerHeight;
-    const showDays = n_mult * 6, pad = {l:90, r:40, t:50, b:80};
+    const showDays = n_mult * 6, pad = {l:85, r:30, t:50, b:70};
     const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
-    const cw = w / 39, rh = h / 59; // 固定 60 線間距
+    const cw = w / 39, rh = h / 59;
 
+    ctx.clearRect(0,0,c.width,c.height);
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
     
-    // 標尺
-    ctx.fillStyle = '#f00'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'right';
-    ctx.fillText("60", pad.l - 15, pad.t + 7);
-    ctx.fillText("20", pad.l - 15, pad.t + (59 * rh) + 7);
-
-    // 長條與綠閃
+    // 1. 繪製號碼背景軌道與長條
     for(let i=0; i<39; i++) {
         const x = pad.l + i * cw;
         let v = parseInt(yearFreq[i]) || 0;
         let barH = ((Math.min(v, 60) - 20) / 40) * h;
-        if (i === blinkCol && blink) { ctx.fillStyle = 'rgba(0,255,0,0.2)'; ctx.fillRect(x, pad.t, cw, h); }
-        ctx.fillStyle = (i === blinkCol && blink) ? '#0ff' : 'rgba(0,150,255,0.3)';
+        
+        // 綠色選中背景
+        if (i === blinkCol && blink) {
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.15)';
+            ctx.fillRect(x, pad.t, cw, h);
+        }
+
+        // 藍色長條
+        ctx.fillStyle = (i === blinkCol && blink) ? '#0ff' : 'rgba(0, 100, 255, 0.4)';
         ctx.fillRect(x + 2, pad.t + h - Math.max(0, barH), cw - 4, Math.max(0, barH));
+        
+        // 底部號碼文字
         ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#888';
-        ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-        ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 35);
+        ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+        ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 30);
     }
 
-    // 橫線與點
+    // 2. 繪製 60 條標尺橫線
     for(let r=0; r<60; r++) {
-        const y = pad.t + r * rh, inShow = r < showDays;
-        ctx.strokeStyle = (r === blinkRow && blink) ? '#f00' : (inShow ? '#333' : '#111');
-        ctx.lineWidth = (r === blinkRow && blink) ? 2 : 1;
-        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
+        const y = pad.t + r * rh;
+        const inShow = r < showDays;
         
-        if (inShow && rawData[r]) {
-            ctx.fillStyle = (r === blinkRow && blink) ? '#f00' : '#666'; ctx.font = '11px Arial'; ctx.textAlign = 'right';
-            ctx.fillText(rawData[r][0].substring(5), pad.l - 10, y + 4);
-            rawData[r][1].forEach(nStr => {
-                const n = parseInt(nStr), x = pad.l + (n-1) * cw + cw/2;
-                const sel = (r === blinkRow || n-1 === blinkCol);
-                ctx.fillStyle = (sel && blink) ? '#fff' : '#f00';
-                ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = (sel && blink) ? '#000' : '#fff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(nStr, x, y);
-            });
+        if (r === blinkRow && blink) {
+            ctx.strokeStyle = '#f00'; ctx.lineWidth = 3;
+        } else {
+            ctx.strokeStyle = inShow ? '#333' : '#111'; ctx.lineWidth = 1;
+        }
+        
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
+
+        // 側邊日期標籤
+        if (inShow) {
+            ctx.fillStyle = (r === blinkRow && blink) ? '#f00' : '#555';
+            ctx.font = '11px Arial'; ctx.textAlign = 'right';
+            ctx.fillText(rawData[r] ? rawData[r][0].substring(5) : "", pad.l - 10, y + 4);
         }
     }
+
+    // 3. 繪製標尺 60/20
+    ctx.fillStyle = '#f00'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'right';
+    ctx.fillText("60", pad.l - 15, pad.t + 7);
+    ctx.fillText("20", pad.l - 15, pad.t + (59 * rh) + 7);
+
+    // 4. 繪製五個點 (最上層)
+    for(let r=0; r<showDays; r++) {
+        const y = pad.t + r * rh;
+        if(!rawData[r]) continue;
+        rawData[r][1].forEach(nStr => {
+            const n = parseInt(nStr);
+            const x = pad.l + (n-1) * cw + cw/2;
+            const isTarget = (r === blinkRow || n-1 === blinkCol);
+            
+            // 繪製圓點
+            ctx.fillStyle = (isTarget && blink) ? '#fff' : '#f00';
+            ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill();
+            
+            // 繪製圓內號碼
+            ctx.fillStyle = (isTarget && blink) ? '#000' : '#fff';
+            ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(nStr, x, y);
+        });
+    }
 }
+
 function changeDays(v) { n_mult = Math.max(1, Math.min(10, n_mult + v)); sync(); }
 function changeRow(v) { blinkRow = (blinkRow + v + (n_mult * 6)) % (n_mult * 6); sync(); }
 function changeCol(v) { blinkCol = (blinkCol + v + 39) % 39; sync(); }
+
 function sync() { 
     document.getElementById('val-days').textContent = n_mult * 6;
     document.getElementById('val-updown').textContent = blinkRow + 1;
     document.getElementById('val-leftright').textContent = (blinkCol + 1).toString().padStart(2,'0');
     draw(); 
 }
+
 setInterval(() => { blink = !blink; draw(); }, 400);
 window.onresize = draw;
 draw();

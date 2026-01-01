@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>539 分析儀 - 60線精準版</title>
+  <title>539 分析儀 - 專業對齊版</title>
   <style>
     body { margin:0; background:#000; color:#fff; font-family:sans-serif; overflow:hidden; display:flex; }
     #chart-container { flex-grow: 1; height: 100vh; position: relative; }
     canvas { background:#000; display: block; }
     .side-panel { 
         width:160px; background:#111; padding:15px; border-left:2px solid #f00; 
-        display:flex; flex-direction:column; gap:12px; height: 100vh; flex-shrink: 0;
+        display:flex; flex-direction:column; gap:12px; height: 100vh; flex-shrink: 0; box-sizing: border-box;
     }
     .ctrl-group { background:#1a1a1a; border:1px solid #333; padding:10px; border-radius:10px; text-align:center; }
     button { width:100%; padding:12px; margin:5px 0; background:#333; color:#fff; border:1px solid #f00; border-radius:8px; cursor:pointer; font-size:18px; font-weight:bold; }
@@ -52,13 +52,16 @@ function draw() {
     c.width = window.innerWidth - 160; c.height = window.innerHeight;
     const showDays = n_mult * 6, pad = {l:90, r:40, t:50, b:80};
     const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
-    const cw = w / 39, rh = h / 59;
+    const cw = w / 39, rh = h / 59; // 固定 60 線間距
 
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
+    
+    // 標尺
     ctx.fillStyle = '#f00'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'right';
     ctx.fillText("60", pad.l - 15, pad.t + 7);
     ctx.fillText("20", pad.l - 15, pad.t + (59 * rh) + 7);
 
+    // 長條與綠閃
     for(let i=0; i<39; i++) {
         const x = pad.l + i * cw;
         let v = parseInt(yearFreq[i]) || 0;
@@ -71,14 +74,16 @@ function draw() {
         ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 35);
     }
 
+    // 橫線與點
     for(let r=0; r<60; r++) {
         const y = pad.t + r * rh, inShow = r < showDays;
         ctx.strokeStyle = (r === blinkRow && blink) ? '#f00' : (inShow ? '#333' : '#111');
         ctx.lineWidth = (r === blinkRow && blink) ? 2 : 1;
         ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
-        if (inShow) {
+        
+        if (inShow && rawData[r]) {
             ctx.fillStyle = (r === blinkRow && blink) ? '#f00' : '#666'; ctx.font = '11px Arial'; ctx.textAlign = 'right';
-            ctx.fillText(rawData[r] ? rawData[r][0].substring(5) : "", pad.l - 10, y + 4);
+            ctx.fillText(rawData[r][0].substring(5), pad.l - 10, y + 4);
             rawData[r][1].forEach(nStr => {
                 const n = parseInt(nStr), x = pad.l + (n-1) * cw + cw/2;
                 const sel = (r === blinkRow || n-1 === blinkCol);

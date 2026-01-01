@@ -2,241 +2,31 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>內容置頂-雲端聯網版</title>
+  <title>539 分析儀 - 橫線對齊完美版</title>
   <style>
-    body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
-    .container { display:flex; background:#000; padding:10px; }
-    canvas { background:#000; border:1px solid #333; }
-    .panel { width:150px; background:#111; padding:15px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:10px; }
+    body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; justify-content:center; overflow-x:hidden; }
+    .container { display:flex; background:#000; width: 100%; }
+    canvas { background:#000; cursor: crosshair; }
+    .panel { 
+        width:160px; background:#111; padding:15px; border-left:2px solid #f00; 
+        display:flex; flex-direction:column; gap:12px; 
+        position:fixed; right:0; top:0; height:100vh; z-index: 100;
+    }
     .group { background:#1a1a1a; border:1px solid #333; padding:10px; border-radius:10px; text-align:center; }
-    button { width:100%; padding:10px; margin:5px 0; background:#333; color:#fff; border:1px solid #f00; border-radius:5px; cursor:pointer; font-size:20px; font-weight:bold; }
-    .value { font-size:26px; color:#0f0; font-weight:bold; }
-    .label { font-size:12px; color:#888; }
+    button { width:100%; padding:12px; margin:5px 0; background:#444; color:#fff; border:2px solid #f00; border-radius:8px; cursor:pointer; font-size:20px; font-weight:bold; }
+    button:active { background:#f00; }
+    .value { font-size:28px; color:#0f0; font-weight:bold; }
+    .label { font-size:13px; color:#888; margin-bottom:5px; }
   </style>
 </head>
 <body>
 <div class="container">
   <canvas id="chart"></canvas>
   <div class="panel">
-    <div class="group"><div class="label">天數 (6-60)</div><div id="val-days" class="value">6</div><button id="days-inc">▲</button><button id="days-dec">▼</button></div>
-    <div class="group"><div class="label">紅閃 (日期)</div><div id="val-updown" class="value">0</div><button id="updown-inc">▲</button><button id="updown-dec">▼</button></div>
-    <div class="group"><div class="label">綠閃 (號碼)</div><div id="val-leftright" class="value">0</div><button id="leftright-inc">▲</button><button id="leftright-dec">▼</button></div>
-  </div>
-</div>
-
-<script>
-let rawData = []; // 預留空間給雲端數據
-const yearFreq = [31,37,37,48,41,40,56,44,41,37,42,46,37,49,32,30,27,37,41,36,39,43,39,52,36,47,53,46,42,35,44,34,34,34,39,38,36,46,39];
-
-// --- ⚡ 關鍵機關：抓取 2025.js ---
-function loadCloudData() {
-    const s = document.createElement('script');
-    s.src = "2025.js?v=" + Date.now(); // 抓取同目錄下的數據檔
-    s.onload = () => {
-        if (typeof AllHistoryData !== 'undefined') {
-            rawData = AllHistoryData; // 對接大寫 A 的變數
-            sync(); // 抓到後立刻畫圖
-        }
-    };
-    document.head.appendChild(s);
-}
-
-const c = document.getElementById('chart'), ctx = c.getContext('2d');
-let n_multiplier = 1, blinkRow = 0, blinkCol = 0, blink = true;
-
-function getGameDates(count) {
-  let dates = [];
-  let curr = new Date(); // 改為抓今天，自動往前排日期
-  while(dates.length < count) {
-    if(curr.getDay() !== 0) dates.push(`${(curr.getMonth()+1).toString().padStart(2,'0')}/${curr.getDate().toString().padStart(2,'0')}`);
-    curr.setDate(curr.getDate() - 1);
-  }
-  return dates;
-}
-const gameDates = getGameDates(100);
-
-function draw() {
-  if (rawData.length === 0) return; // 沒數據就不畫
-  const showDays = n_multiplier * 6;
-  const baseH = 500, baseW = 800;
-  c.height = baseH + (baseH/6) + 100; c.width = baseW + 250; 
-
-  const pad = {l:90, r:40, t:15, b:85}; 
-  const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
-  const cw = w / 39, rh = h / showDays; 
-
-  ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
-
-  // 1. 藍色長條
-  for(let i=0; i<39; i++) {
-    const x = pad.l + i*cw;
-    let val = yearFreq[i] || 0;
-    if(val >= 20) {
-      let barH = ((Math.min(val, 60)-20)/40) * h;
-      ctx.fillStyle = (i === blinkCol && blink) ? '#0ff' : 'rgba(0, 200, 255, 0.35)';
-      ctx.fillRect(x+2, pad.t + h - barH, cw-4, barH);
-      ctx.fillStyle = (i === blinkCol && blink) ? '#fff' : '#0ff';
-      ctx.font = 'bold 12px Arial'; ctx.textAlign='center';
-      ctx.fillText(val, x+cw/2, pad.t + h - barH - 8);
-    }
-    ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#888';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+35);
-  }
-
-  // 2. 十字閃爍線
-  if(blink) {
-    ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + blinkRow*rh + rh/2); ctx.lineTo(pad.l+w, pad.t + blinkRow*rh + rh/2); ctx.stroke();
-    ctx.strokeStyle = '#0f0';
-    ctx.beginPath(); ctx.moveTo(pad.l + blinkCol*cw + cw/2, pad.t); ctx.lineTo(pad.l + blinkCol*cw + cw/2, pad.t+h); ctx.stroke();
-  }
-
-  // 3. 繪製紅點
-  for(let r=0; r<showDays; r++) {
-    const y = pad.t + r*rh + rh/2;
-    ctx.fillStyle = (r === blinkRow && blink) ? '#f00' : '#888';
-    ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left';
-    ctx.fillText(gameDates[r] || "", 5, y + 5);
-
-    if(rawData[r]) {
-      rawData[r].forEach(nStr => {
-        let n = parseInt(nStr);
-        const x = pad.l + (n-1)*cw + cw/2;
-        let dotR = Math.min(cw/2.2, rh/2.2);
-        ctx.fillStyle = (r === blinkRow || n-1 === blinkCol) && blink ? '#f00' : '#600';
-        ctx.beginPath(); ctx.arc(x, y, dotR, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
-        ctx.fillText(nStr, x, y + 4);
-      });
-    }
-  }
-}
-
-function sync(){ 
-  document.getElementById('val-days').textContent = n_multiplier * 6; 
-  document.getElementById('val-updown').textContent = blinkRow; 
-  document.getElementById('val-leftright').textContent = blinkCol; 
-  draw(); 
-}
-
-setInterval(()=>{ blink=!blink; draw(); }, 400);
-
-document.getElementById('days-inc').onclick=()=>{ n_multiplier=n_multiplier>=10?1:n_multiplier+1; sync(); };
-document.getElementById('days-dec').onclick=()=>{ n_multiplier=n_multiplier<=1?10:n_multiplier-1; sync(); };
-document.getElementById('updown-inc').onclick=()=>{ blinkRow=(blinkRow+1)%(n_multiplier*6); sync(); };
-document.getElementById('updown-dec').onclick=()=>{ blinkRow=(blinkRow-1+(n_multiplier*6))%(n_multiplier*6); sync(); };
-document.getElementById('leftright-inc').onclick=()=>{ blinkCol=(blinkCol+1)%39; sync(); };
-document.getElementById('leftright-dec').onclick=()=>{ blinkCol=(blinkCol-1+39)%39; sync(); };
-
-// 啟動連線
-loadCloudData();
-</script>
-</body>
-</html>
-
-  // 1. 畫背景：橫向與縱向網格線
-  ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-  for(let r=0; r<=showDays; r++) { // 橫線
-    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + r*rh); ctx.lineTo(pad.l+w, pad.t + r*rh); ctx.stroke();
-  }
-  for(let i=0; i<=39; i++) { // 縱線
-    ctx.beginPath(); ctx.moveTo(pad.l + i*cw, pad.t); ctx.lineTo(pad.l + i*cw, pad.t+h); ctx.stroke();
-  }
-
-  // 2. 頻率長條 (背景)
-  for(let i=0; i<39; i++) {
-    const x = pad.l + i*cw;
-    let v = yearFreq[i] || 0;
-    let bH = ((Math.min(v,60)-20)/40) * h;
-    ctx.fillStyle = (i===blinkCol && blink) ? 'rgba(0,255,0,0.2)' : 'rgba(0,180,255,0.05)';
-    ctx.fillRect(x+1, pad.t + h - bH, cw-2, bH);
-    ctx.fillStyle = (i===blinkCol) ? '#0f0' : '#555';
-    ctx.font = 'bold 16px Arial'; ctx.textAlign='center';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+35);
-  }
-
-  // 3. 亮起的橫向軌道 (目前選擇的日期)
-  if(blink) {
-    ctx.fillStyle = 'rgba(255,0,0,0.15)';
-    ctx.fillRect(pad.l, pad.t + blinkRow*rh, w, rh);
-    ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
-    ctx.strokeRect(pad.l, pad.t + blinkRow*rh, w, rh);
-    
-    // 亮起的縱向軌道 (目前選擇的號碼)
-    ctx.fillStyle = 'rgba(0,255,0,0.15)';
-    ctx.fillRect(pad.l + blinkCol*cw, pad.t, cw, h);
-    ctx.strokeStyle = '#0f0';
-    ctx.strokeRect(pad.l + blinkCol*cw, pad.t, cw, h);
-  }
-
-  // 4. 繪製紅點 (鎖定在橫格內)
-  for(let r=0; r<showDays; r++) {
-    const y = pad.t + r*rh + rh/2;
-    ctx.fillStyle = (r===blinkRow) ? '#fff' : '#888';
-    ctx.font = 'bold 14px Arial'; ctx.textAlign = 'left';
-    ctx.fillText(gameDates[r] || "", 10, y+5);
-
-    if(rawData[r]) {
-      rawData[r].forEach(nStr => {
-        let n = parseInt(nStr);
-        let x = pad.l + (n-1)*cw + cw/2;
-        
-        const isTarget = (r===blinkRow || n-1===blinkCol);
-        ctx.fillStyle = isTarget && blink ? '#fff' : '#c00';
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 12, 0, Math.PI*2); // 紅點稍微加大
-        ctx.fill();
-        
-        ctx.fillStyle = isTarget && blink ? '#000' : '#fff';
-        ctx.font = 'bold 11px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(nStr, x, y);
-      });
-    }
-  }
-}
-
-function sync(){ 
-  document.getElementById('val-days').textContent=n_multiplier*6; 
-  document.getElementById('val-updown').textContent=blinkRow; 
-  document.getElementById('val-leftright').textContent=blinkCol; 
-  draw(); 
-}
-
-setInterval(()=>{ blink=!blink; draw(); }, 400);
-document.getElementById('days-inc').onclick=()=>{ n_multiplier=n_multiplier>=10?1:n_multiplier+1; sync(); };
-document.getElementById('updown-inc').onclick=()=>{ blinkRow=(blinkRow+1)%(n_multiplier*6); sync(); };
-document.getElementById('leftright-inc').onclick=()=>{ blinkCol=(blinkCol+1)%39; sync(); };
-
-loadData();
-</script>
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>539 分析儀 - 橫線對齊版</title>
-  <style>
-    body { margin:0; background:#000; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:flex-start; height:100vh; overflow-y:auto; }
-    .container { display:flex; background:#000; padding:10px; min-height:100%; }
-    canvas { background:#000; border:1px solid #333; }
-    .panel { width:150px; background:#111; padding:15px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:10px; position:sticky; top:0; height:100vh; }
-    .group { background:#1a1a1a; border:1px solid #333; padding:10px; border-radius:10px; text-align:center; }
-    button { width:100%; padding:10px; margin:5px 0; background:#444; color:#fff; border:2px solid #f00; border-radius:5px; cursor:pointer; font-size:22px; font-weight:bold; }
-    .value { font-size:26px; color:#0f0; font-weight:bold; }
-    .label { font-size:12px; color:#888; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <canvas id="chart"></canvas>
-  <div class="panel">
-    <div class="group"><div class="label">天數 (6-60)</div><div id="val-days" class="value">6</div><button id="days-inc">天數 ▲</button></div>
+    <div class="group"><div class="label">天數倍率</div><div id="val-days" class="value">6</div><button id="days-inc">加大 ▲</button></div>
     <div class="group"><div class="label">日期軌道</div><div id="val-updown" class="value">0</div><button id="updown-inc">日期 ▲</button></div>
     <div class="group"><div class="label">號碼軌道</div><div id="val-leftright" class="value">0</div><button id="leftright-inc">號碼 ▲</button></div>
-    <div style="font-size:12px; color:#f0f; text-align:center; margin-top:10px;">📏 紅點已鎖定橫線</div>
+    <div style="font-size:12px; color:#0ff; text-align:center;">🟢 數據載入成功</div>
   </div>
 </div>
 
@@ -256,8 +46,9 @@ let n_multiplier = 1, blinkRow = 0, blinkCol = 0, blink = true;
 
 function getGameDates(count) {
   let dates = []; let curr = new Date();
-  while(dates.length < count) {
-    if(curr.getDay() !== 0) dates.push(`${(curr.getMonth()+1).toString().padStart(2,'0')}/${curr.getDate().toString().padStart(2,'0')}`);
+  for(let i=0; i<count; i++){
+    while(curr.getDay() === 0) curr.setDate(curr.getDate() - 1);
+    dates.push(`${(curr.getMonth()+1).toString().padStart(2,'0')}/${curr.getDate().toString().padStart(2,'0')}`);
     curr.setDate(curr.getDate() - 1);
   }
   return dates;
@@ -267,54 +58,49 @@ const gameDates = getGameDates(100);
 function draw() {
   if (rawData.length === 0) return;
   const showDays = n_multiplier * 6;
-  c.height = 1200; // 縱向拉長
-  c.width = 1000;  // 橫向加寬
   
-  const pad = {l:80, r:30, t:40, b:60};
+  // 設定畫布尺寸
+  c.width = window.innerWidth - 160;
+  c.height = Math.max(window.innerHeight, showDays * 50 + 100);
+  
+  const pad = {l:80, r:40, t:50, b:80};
   const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
   const cw = w / 39, rh = h / showDays;
 
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-  // 1. 畫背景：橫向與縱向網格線
-  ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-  for(let r=0; r<=showDays; r++) { // 橫線
-    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + r*rh); ctx.lineTo(pad.l+w, pad.t + r*rh); ctx.stroke();
-  }
-  for(let i=0; i<=39; i++) { // 縱線
-    ctx.beginPath(); ctx.moveTo(pad.l + i*cw, pad.t); ctx.lineTo(pad.l + i*cw, pad.t+h); ctx.stroke();
+  // 1. 畫背景橫向軌道（橫線）
+  ctx.lineWidth = 1;
+  for(let r=0; r<showDays; r++) {
+    ctx.strokeStyle = (r === blinkRow) ? '#444' : '#222';
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t + r*rh + rh/2); ctx.lineTo(pad.l+w, pad.t + r*rh + rh/2); ctx.stroke();
   }
 
-  // 2. 頻率長條 (背景)
+  // 2. 頻率長條
   for(let i=0; i<39; i++) {
     const x = pad.l + i*cw;
     let v = yearFreq[i] || 0;
     let bH = ((Math.min(v,60)-20)/40) * h;
-    ctx.fillStyle = (i===blinkCol && blink) ? 'rgba(0,255,0,0.2)' : 'rgba(0,180,255,0.05)';
-    ctx.fillRect(x+1, pad.t + h - bH, cw-2, bH);
-    ctx.fillStyle = (i===blinkCol) ? '#0f0' : '#555';
-    ctx.font = 'bold 16px Arial'; ctx.textAlign='center';
+    ctx.fillStyle = (i===blinkCol && blink) ? 'rgba(0,255,0,0.25)' : 'rgba(0,150,255,0.08)';
+    ctx.fillRect(x+2, pad.t + h - bH, cw-4, bH);
+    // 底部數字
+    ctx.fillStyle = (i===blinkCol) ? '#0f0' : '#666';
+    ctx.font = 'bold 15px Arial'; ctx.textAlign='center';
     ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+35);
   }
 
-  // 3. 亮起的橫向軌道 (目前選擇的日期)
+  // 3. 閃爍指示
   if(blink) {
-    ctx.fillStyle = 'rgba(255,0,0,0.15)';
-    ctx.fillRect(pad.l, pad.t + blinkRow*rh, w, rh);
-    ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
+    ctx.strokeStyle = '#f00'; ctx.lineWidth = 3;
     ctx.strokeRect(pad.l, pad.t + blinkRow*rh, w, rh);
-    
-    // 亮起的縱向軌道 (目前選擇的號碼)
-    ctx.fillStyle = 'rgba(0,255,0,0.15)';
-    ctx.fillRect(pad.l + blinkCol*cw, pad.t, cw, h);
     ctx.strokeStyle = '#0f0';
     ctx.strokeRect(pad.l + blinkCol*cw, pad.t, cw, h);
   }
 
-  // 4. 繪製紅點 (鎖定在橫格內)
+  // 4. 繪製紅點
   for(let r=0; r<showDays; r++) {
     const y = pad.t + r*rh + rh/2;
-    ctx.fillStyle = (r===blinkRow) ? '#fff' : '#888';
+    ctx.fillStyle = (r===blinkRow) ? '#fff' : '#777';
     ctx.font = 'bold 14px Arial'; ctx.textAlign = 'left';
     ctx.fillText(gameDates[r] || "", 10, y+5);
 
@@ -322,15 +108,12 @@ function draw() {
       rawData[r].forEach(nStr => {
         let n = parseInt(nStr);
         let x = pad.l + (n-1)*cw + cw/2;
+        const isPick = (r===blinkRow || n-1===blinkCol);
         
-        const isTarget = (r===blinkRow || n-1===blinkCol);
-        ctx.fillStyle = isTarget && blink ? '#fff' : '#c00';
+        ctx.fillStyle = isPick && blink ? '#fff' : '#d00';
+        ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI*2); ctx.fill();
         
-        ctx.beginPath();
-        ctx.arc(x, y, 12, 0, Math.PI*2); // 紅點稍微加大
-        ctx.fill();
-        
-        ctx.fillStyle = isTarget && blink ? '#000' : '#fff';
+        ctx.fillStyle = isPick && blink ? '#000' : '#fff';
         ctx.font = 'bold 11px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(nStr, x, y);
       });
@@ -350,6 +133,7 @@ document.getElementById('days-inc').onclick=()=>{ n_multiplier=n_multiplier>=10?
 document.getElementById('updown-inc').onclick=()=>{ blinkRow=(blinkRow+1)%(n_multiplier*6); sync(); };
 document.getElementById('leftright-inc').onclick=()=>{ blinkCol=(blinkCol+1)%39; sync(); };
 
+window.onresize = draw;
 loadData();
 </script>
 </body>

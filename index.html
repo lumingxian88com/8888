@@ -1,113 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 戰略終端 - 座標對位版</title>
-    <style>
-        body { margin: 0; background: #000; color: #fff; font-family: monospace; overflow: hidden; display: flex; }
-        #canvas-wrap { flex: 1; height: 100vh; position: relative; }
-        canvas { display: block; }
-        .panel { width: 230px; background: #080808; border-left: 3px solid #f00; display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; overflow-y: auto; }
-        #reset-btn { width: 100%; height: 50px; background: #400; border: 2px solid #f00; border-radius: 10px; color: #ff4444; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 5px; }
-        #reset-btn.active { background: #f00; color: #fff; box-shadow: 0 0 20px #f00; }
-        .group { background: #111; border: 1px solid #333; padding: 6px; border-radius: 10px; text-align: center; }
-        .label { font-size: 10px; color: #666; margin-bottom: 2px; }
-        .val { font-size: 26px; color: #0f0; font-weight: 900; }
-        .btn-row { display: flex; gap: 4px; margin-top: 4px; }
-        .btn-row button { flex: 1; padding: 10px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 20px; font-weight: bold; }
-        .obs { border-color: #004488; background: #000815; }
-        .obs .val { color: #00dfff; }
-    </style>
+  <meta charset="UTF-8">
+  <title>精密刻度對位版</title>
+  <style>
+    body { margin:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family: monospace; }
+    .container { display:flex; background:#000; }
+    canvas { border:1px solid #444; }
+    .panel { width:60px; background:#111; padding:5px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:10px; }
+    .group { background:#1a1a1a; padding:5px; text-align:center; }
+    button { width:100%; padding:8px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:18px; font-weight:700; }
+    .value { font-size:18px; color:#0f0; font-weight:700; margin:5px 0; border:1px solid #555; background:#000; }
+    .label { font-size:14px; color:#888; margin-bottom:2px; }
+  </style>
 </head>
 <body>
-<div id="canvas-wrap"><canvas id="main"></canvas></div>
-<div class="panel">
-    <button id="reset-btn" onclick="toggleReturn()">開始 / 回歸 (12/31)</button>
-    <div class="group"><div class="label">RANGE</div><div id="d-v" class="val">06</div><div class="btn-row"><button onclick="chgD(-6)">▼</button><button onclick="chgD(6)">▲</button></div></div>
-    <div class="group"><div class="label">ORBIT</div><div id="r-v" class="val">00</div><div class="btn-row"><button onclick="chgR(-1)">▼</button><button onclick="chgR(1)">▲</button></div></div>
-    <div class="group"><div class="label">SCAN</div><div id="c-v" class="val">01</div><div class="btn-row"><button onclick="chgC(-1)">▼</button><button onclick="chgC(1)">▲</button></div></div>
-    <div style="height: 1px; background: #444; margin: 4px 0;"></div>
-    <div class="group obs"><div class="label">TRK A</div><div id="o1-v" class="val">10</div><div class="btn-row"><button onclick="chgO(1,-1)">▼</button><button onclick="chgO(1,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRK B</div><div id="o2-v" class="val">22</div><div class="btn-row"><button onclick="chgO(2,-1)">▼</button><button onclick="chgO(2,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRK C</div><div id="o3-v" class="val">07</div><div class="btn-row"><button onclick="chgO(3,-1)">▼</button><button onclick="chgO(3,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRK D</div><div id="o4-v" class="val">01</div><div class="btn-row"><button onclick="chgO(4,-1)">▼</button><button onclick="chgO(4,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRK E</div><div id="o5-v" class="val">02</div><div class="btn-row"><button onclick="chgO(5,-1)">▼</button><button onclick="chgO(5,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRK F</div><div id="o6-v" class="val">03</div><div class="btn-row"><button onclick="chgO(6,-1)">▼</button><button onclick="chgO(6,1)">▲</button></div></div>
+<div class="container">
+  <canvas id="chart"></canvas>
+  <div class="panel">
+    <div class="group"><div class="label">格數</div><button id="n-inc">▲</button><div id="val-n" class="value">5</div><button id="n-dec">▼</button></div>
+    <div class="group"><div class="label">紅閃</div><button id="r-inc">▲</button><div id="val-r" class="value">0</div><button id="r-dec">▼</button></div>
+    <div class="group"><div class="label">綠閃</div><button id="c-inc">▲</button><div id="val-c" class="value">0</div><button id="c-dec">▼</button></div>
+  </div>
 </div>
+
 <script>
-const D = Array.from({length: 61}, () => Array.from({length: 5}, () => Math.floor(Math.random() * 39) + 1));
-const dates = (()=>{let d=[],c=new Date("2026-01-01");while(d.length<100){if(c.getDay()!==0)d.push(`${(c.getMonth()+1)}/${c.getDate()}`);c.setDate(c.getDate()-1);}return d;})();
-const cvs = document.getElementById('main'), ctx = cvs.getContext('2d');
-let mulD = 6, sR = 0, sC = 0, obs = [10, 22, 7, 1, 2, 3], blk = true, isRunning = false;
+const c = document.getElementById('chart');
+const ctx = c.getContext('2d');
+let gridCount = 5; // 你說的 5格 或 11格
+let blinkRow = 0, blinkCol = 0, blink = true;
 
-function render() {
-    cvs.width = window.innerWidth - 230; cvs.height = window.innerHeight;
-    const p = {l: 110, r: 35, t: 40, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
-    const cw = W / 39, rh = H / 59; // 59個間隔對應60天
-    ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
+const yearFreq = ["31","37","37","48","42","40","56","45","41","39","44","47","38","49","32","30","27","37","41","36","39","43","39","53","36","48","54","46","43","35","44","34","35","34","40","38","37"];
 
-    const xPos = p.l - 20;
+function draw() {
+  c.height = 700; c.width = 950;
+  const pad = {l:100, r:40, t:20, b:80};
+  const w = c.width - pad.l - pad.r;
+  const h = c.height - pad.t - pad.b;
+  const cw = w / 39;
+  
+  // 每格高度由 gridCount 決定，總高度平攤 40 次數
+  const rh = h / gridCount; 
 
-    // 繪製座標
-    for(let r=0; r<60; r++) {
-        let y = p.t + r * rh;
-        let dayNum = r + 1;
-        let isStep = (dayNum % 6 === 0 || dayNum === 1 || dayNum === 60);
-        
-        ctx.strokeStyle = (dayNum === 1 || dayNum === 60) ? '#f00' : (isStep ? '#444' : '#111');
-        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l+W, y); ctx.stroke();
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-        if(isStep) {
-            ctx.textAlign = 'right';
-            // 第一天對齊 60
-            if(dayNum === 1) {
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
-                ctx.fillText("60", xPos, y + 8);
-                ctx.fillStyle = '#f00'; ctx.font = '12px Arial';
-                ctx.fillText("1", xPos - 35, y + 6);
-            } 
-            // 最後一天對齊 20
-            else if(dayNum === 60) {
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
-                ctx.fillText("20", xPos, y + 8);
-                ctx.fillStyle = '#f00'; ctx.font = '12px Arial';
-                ctx.fillText("60", xPos - 35, y + 6);
-            }
-            // 中間倍數標記
-            else {
-                ctx.fillStyle = '#666'; ctx.font = 'bold 14px Arial';
-                ctx.fillText(dayNum.toString(), xPos - 35, y + 5);
-            }
-        }
+  // --- 40次數刻度邏輯 ---
+  // 5格模式: 每格=8次數 | 11格模式: 每格約3.6次數
+  const stepVal = 40 / gridCount; 
 
-        if(r < mulD) {
-            ctx.fillStyle = '#444'; ctx.font = '10px Arial'; ctx.textAlign = 'right';
-            ctx.fillText(dates[r]||"", p.l-70, y+4);
-            if(D[r]) D[r].forEach(n => {
-                let x=p.l+(n-1)*cw+cw/2, act=(r===sR&&n-1===sC&&blk);
-                ctx.fillStyle=act?'#fff':(obs.includes(n)?'#00dfff':(n-1===sC&&blk?'#f00':'#300'));
-                ctx.beginPath(); ctx.arc(x,y,Math.min(cw,rh)/2.5,0,Math.PI*2); ctx.fill();
-            });
-        }
-    }
+  for(let i=0; i<=gridCount; i++) {
+    let y = pad.t + i * rh;
+    let currentVal = 60 - (i * stepVal); // 從 60 開始扣
+
+    ctx.strokeStyle = '#333';
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+w, y); ctx.stroke();
+
+    // 次數左切齊 (20-60)
+    ctx.fillStyle = (i===0 || i===gridCount) ? '#f00' : '#fff';
+    ctx.font = 'bold 20px Arial'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(currentVal), pad.l - 15, y + 7);
+    
+    // 格數標記
+    ctx.fillStyle = '#666'; ctx.font = '12px Arial';
+    ctx.fillText("G" + i, pad.l - 55, y + 5);
+  }
+
+  // 頻率藍條 (根據 20-60 比例縮放)
+  for(let i=0; i<39; i++) {
+    const x = pad.l + i*cw;
+    let val = parseInt(yearFreq[i]) || 0;
+    let barH = ((Math.max(20, Math.min(val, 60)) - 20) / 40) * h;
+    
+    ctx.fillStyle = (i === blinkCol && blink) ? '#0ff' : 'rgba(0, 150, 255, 0.2)';
+    ctx.fillRect(x+1, pad.t + h - barH, cw-2, barH);
+    
+    ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#777';
+    ctx.font = 'bold 14px Arial'; ctx.textAlign='center';
+    ctx.fillText((i+1).toString().padStart(2,'0'), x+cw/2, pad.t+h+35);
+  }
+
+  // 閃爍交叉線
+  if(blink) {
+    const tx = pad.l + blinkCol * cw + cw/2;
+    const ty = pad.t + blinkRow * rh;
+    ctx.strokeStyle = '#0f0'; ctx.beginPath(); ctx.moveTo(tx, pad.t); ctx.lineTo(tx, pad.t+h); ctx.stroke();
+    ctx.strokeStyle = '#f00'; ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(pad.l+w, ty); ctx.stroke();
+  }
 }
-function chgD(v){ mulD+=v; if(mulD>60)mulD=6; if(mulD<6)mulD=60; sync(); }
-function chgR(v){ sR=(sR+v+60)%60; sync(); }
-function chgC(v){ sC=(sC+v+39)%39; sync(); }
-function chgO(idx,v){ obs[idx-1]=(obs[idx-1]+v+39)%40; if(obs[idx-1]===0)obs[idx-1]=39; sync(); }
-function toggleReturn() {
-    if(!isRunning){isRunning=true; document.getElementById('reset-btn').classList.add('active');}
-    else{isRunning=false; document.getElementById('reset-btn').classList.remove('active'); mulD=6; sR=0; sC=0; sync();}
+
+// 循環邏輯修正
+document.getElementById('n-inc').onclick=()=>{ gridCount = (gridCount === 5) ? 11 : 5; sync(); };
+document.getElementById('n-dec').onclick=()=>{ gridCount = (gridCount === 11) ? 5 : 11; sync(); };
+document.getElementById('r-inc').onclick=()=>{ blinkRow = (blinkRow + 1) % (gridCount + 1); sync(); };
+document.getElementById('r-dec').onclick=()=>{ blinkRow = (blinkRow - 1 + (gridCount + 1)) % (gridCount + 1); sync(); };
+document.getElementById('c-inc').onclick=()=>{ blinkCol = (blinkCol + 1) % 39; sync(); };
+document.getElementById('c-dec').onclick=()=>{ blinkCol = (blinkCol - 1 + 39) % 39; sync(); };
+
+function sync(){ 
+  document.getElementById('val-n').textContent = gridCount; 
+  document.getElementById('val-r').textContent = blinkRow;
+  document.getElementById('val-c').textContent = blinkCol;
+  draw(); 
 }
-function sync() {
-    document.getElementById('d-v').innerText=mulD.toString().padStart(2,'0');
-    document.getElementById('r-v').innerText=sR.toString().padStart(2,'0');
-    document.getElementById('c-v').innerText=(sC+1).toString().padStart(2,'0');
-    for(let i=1;i<=6;i++) document.getElementById(`o${i}-v`).innerText=obs[i-1].toString().padStart(2,'0');
-    render();
-}
-setInterval(()=>{blk=!blk; render();}, 400); window.onresize=render; sync();
+setInterval(()=>{ blink=!blink; draw(); }, 400);
+sync();
 </script>
 </body>
 </html>

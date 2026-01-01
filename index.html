@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 戰略終端 - 標尺左切齊版</title>
+    <title>539 戰略終端 - 座標鎖死版</title>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: monospace; overflow: hidden; display: flex; }
         #canvas-wrap { flex: 1; height: 100vh; position: relative; }
         canvas { display: block; }
         .panel { width: 230px; background: #080808; border-left: 3px solid #f00; display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; overflow-y: auto; }
         
-        #reset-btn { width: 100%; height: 55px; background: #400; border: 2px solid #f00; border-radius: 10px; color: #ff4444; font-size: 16px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-bottom: 5px; }
+        #reset-btn { width: 100%; height: 50px; background: #400; border: 2px solid #f00; border-radius: 10px; color: #ff4444; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 5px; }
         #reset-btn.active { background: #f00; color: #fff; box-shadow: 0 0 20px #f00; }
 
         .group { background: #111; border: 1px solid #333; padding: 6px; border-radius: 10px; text-align: center; }
-        .label { font-size: 10px; color: #666; margin-bottom: 2px; text-transform: uppercase; }
+        .label { font-size: 10px; color: #666; margin-bottom: 2px; }
         .val { font-size: 26px; color: #0f0; font-weight: 900; }
         
         .btn-row { display: flex; gap: 4px; margin-top: 4px; }
-        .btn-row button { flex: 1; padding: 12px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 20px; font-weight: bold; }
+        .btn-row button { flex: 1; padding: 10px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 20px; font-weight: bold; }
         .btn-row button:active { background: #f00; }
 
         .obs { border-color: #004488; background: #000815; }
@@ -32,90 +32,95 @@
 <div class="panel">
     <button id="reset-btn" onclick="toggleReturn()">開始 / 回歸 (12/31)</button>
 
-    <div class="group"><div class="label">Analysis Range</div><div id="d-v" class="val">06</div>
-        <div class="btn-row"><button onclick="chgD(-6)">▼</button><button onclick="chgD(6)">▲</button></div></div>
-    <div class="group"><div class="label">Date Orbit</div><div id="r-v" class="val">00</div>
-        <div class="btn-row"><button onclick="chgR(-1)">▼</button><button onclick="chgR(1)">▲</button></div></div>
-    <div class="group"><div class="label">Scan Target</div><div id="c-v" class="val">01</div>
-        <div class="btn-row"><button onclick="chgC(-1)">▼</button><button onclick="chgC(1)">▲</button></div></div>
+    <div class="group"><div class="label">RANGE</div><div id="d-v" class="val">06</div><div class="btn-row"><button onclick="chgD(-6)">▼</button><button onclick="chgD(6)">▲</button></div></div>
+    <div class="group"><div class="label">ORBIT</div><div id="r-v" class="val">00</div><div class="btn-row"><button onclick="chgR(-1)">▼</button><button onclick="chgR(1)">▲</button></div></div>
+    <div class="group"><div class="label">SCAN</div><div id="c-v" class="val">01</div><div class="btn-row"><button onclick="chgC(-1)">▼</button><button onclick="chgC(1)">▲</button></div></div>
 
-    <div style="height: 1px; background: #333; margin: 4px 0;"></div>
+    <div style="height: 1px; background: #444; margin: 5px 0;"></div>
 
-    <div class="group obs"><div class="label">TRACK A</div><div id="o1-v" class="val">10</div><div class="btn-row"><button onclick="chgO(1,-1)">▼</button><button onclick="chgO(1,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRACK B</div><div id="o2-v" class="val">22</div><div class="btn-row"><button onclick="chgO(2,-1)">▼</button><button onclick="chgO(2,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRACK C</div><div id="o3-v" class="val">07</div><div class="btn-row"><button onclick="chgO(3,-1)">▼</button><button onclick="chgO(3,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRACK D</div><div id="o4-v" class="val">01</div><div class="btn-row"><button onclick="chgO(4,-1)">▼</button><button onclick="chgO(4,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRACK E</div><div id="o5-v" class="val">02</div><div class="btn-row"><button onclick="chgO(5,-1)">▼</button><button onclick="chgO(5,1)">▲</button></div></div>
-    <div class="group obs"><div class="label">TRACK F</div><div id="o6-v" class="val">03</div><div class="btn-row"><button onclick="chgO(6,-1)">▼</button><button onclick="chgO(6,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK A</div><div id="o1-v" class="val">10</div><div class="btn-row"><button onclick="chgO(1,-1)">▼</button><button onclick="chgO(1,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK B</div><div id="o2-v" class="val">22</div><div class="btn-row"><button onclick="chgO(2,-1)">▼</button><button onclick="chgO(2,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK C</div><div id="o3-v" class="val">07</div><div class="btn-row"><button onclick="chgO(3,-1)">▼</button><button onclick="chgO(3,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK D</div><div id="o4-v" class="val">01</div><div class="btn-row"><button onclick="chgO(4,-1)">▼</button><button onclick="chgO(4,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK E</div><div id="o5-v" class="val">02</div><div class="btn-row"><button onclick="chgO(5,-1)">▼</button><button onclick="chgO(5,1)">▲</button></div></div>
+    <div class="group obs"><div class="label">TRK F</div><div id="o6-v" class="val">03</div><div class="btn-row"><button onclick="chgO(6,-1)">▼</button><button onclick="chgO(6,1)">▲</button></div></div>
 </div>
 
 <script>
+// 數據與日期初始化
 const F = [31,37,37,48,41,40,56,44,41,37,42,46,37,49,32,30,27,37,41,36,39,43,39,52,36,47,53,46,42,35,44,34,34,34,39,38,36,46,39];
 const D = Array.from({length: 61}, () => Array.from({length: 5}, () => Math.floor(Math.random() * 39) + 1));
 const dates = (()=>{let d=[],c=new Date("2026-01-01");while(d.length<100){if(c.getDay()!==0)d.push(`${(c.getMonth()+1)}/${c.getDate()}`);c.setDate(c.getDate()-1);}return d;})();
 
 const cvs = document.getElementById('main'), ctx = cvs.getContext('2d');
-let mulD = 6, sR = 0, sC = 0, obs = [10, 22, 7, 1, 2, 3], blk = true, isRunning = false;
+let mulD = 6, sR = 0, sC = 0, obs = [10, 22, 07, 01, 02, 03], blk = true, isRunning = false;
 
 function render() {
     cvs.width = window.innerWidth - 230; cvs.height = window.innerHeight;
-    const p = {l: 95, r: 35, t: 15, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
+    const p = {l: 100, r: 35, t: 30, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
     const cw = W / 39, rh = H / 60;
+    
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
 
-    // 繪製頂部次數標籤 (60, 20)
+    // 強制左切齊座標點
+    const alignX = p.l - 20;
+
+    // 1. 次數標籤 (60, 20)
     ctx.fillStyle = '#f00'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'right';
-    ctx.fillText("60", p.l-15, p.t+22);
-    ctx.fillText("20", p.l-15, p.t+59*rh+5);
+    ctx.fillText("60", alignX, p.t + 10);
+    ctx.fillText("20", alignX, p.t + 59 * rh + 5);
 
     for(let r=0; r<=60; r++) {
-        let y = p.t + r * rh, isStp = (r > 0 && r % 6 === 0);
-        ctx.strokeStyle = isStp ? '#f00' : (r < mulD ? '#222' : '#0a0a0a');
-        ctx.lineWidth = isStp ? 2 : 1;
-        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l+W, y); ctx.stroke();
+        let y = p.t + r * rh, isStep = (r > 0 && r % 6 === 0);
+        ctx.strokeStyle = isStep ? '#f00' : (r < mulD ? '#222' : '#0a0a0a');
+        ctx.lineWidth = isStep ? 2 : 1;
+        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l + W, y); ctx.stroke();
         
-        // 修正標記對齊：讓 6, 12, 18 與上面的 60, 20 左切齊
-        if(isStp){ 
-            ctx.fillStyle='#f00'; 
-            ctx.font='bold 14px Arial'; 
-            ctx.textAlign='right'; 
-            ctx.fillText(r.toString().padStart(2,'0'), p.l-15, y+5); 
+        // 2. 6倍數天數標籤 - 鎖定與 60/20 同一垂直線
+        if(isStep) {
+            ctx.fillStyle = '#f00'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'right';
+            ctx.fillText(r.toString().padStart(2,'0'), alignX, y + 6);
         }
-        
+
         if(r < mulD) {
-            ctx.fillStyle='#555'; ctx.font='11px Arial'; ctx.textAlign='right'; ctx.fillText(dates[r]||"", p.l-45, y+5);
+            ctx.fillStyle = '#555'; ctx.font = '11px Arial'; ctx.textAlign = 'right';
+            ctx.fillText(dates[r] || "", p.l - 45, y + 5);
             if(D[r]) D[r].forEach(n => {
-                let x=p.l+(n-1)*cw+cw/2, isO=obs.includes(n), active=(r===sR&&n-1===sC&&blk);
-                ctx.fillStyle=active?'#fff':(isO?'#00dfff':(n-1===sC&&blk?'#f00':'#400000'));
-                ctx.beginPath(); ctx.arc(x,y,Math.min(cw,rh)/2.3,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle=(isO||active)?'#000':'#fff';
-                ctx.font='bold 10px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(n.toString().padStart(2,'0'),x,y);
+                let x = p.l + (n-1) * cw + cw/2;
+                let active = (r === sR && n-1 === sC && blk);
+                ctx.fillStyle = active ? '#fff' : (obs.includes(n) ? '#00dfff' : (n-1===sC && blk ? '#f00' : '#400000'));
+                ctx.beginPath(); ctx.arc(x, y, Math.min(cw, rh)/2.3, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = (obs.includes(n) || active) ? '#000' : '#fff';
+                ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(n.toString().padStart(2,'0'), x, y);
             });
         }
     }
+    // 橫豎同步閃爍
     if(blk) {
-        ctx.strokeStyle='#0f0'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(p.l+sC*cw+cw/2, p.t); ctx.lineTo(p.l+sC*cw+cw/2, p.t+60*rh); ctx.stroke();
-        ctx.strokeStyle='rgba(0,255,0,0.3)';
-        ctx.beginPath(); ctx.moveTo(p.l, p.t+sR*rh+rh/2); ctx.lineTo(p.l+W, p.t+sR*rh+rh/2); ctx.stroke();
+        ctx.strokeStyle = '#0f0'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.l + sC * cw + cw/2, p.t); ctx.lineTo(p.l + sC * cw + cw/2, p.t + 60 * rh); ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,255,0,0.3)';
+        ctx.beginPath(); ctx.moveTo(p.l, p.t + sR * rh + rh/2); ctx.lineTo(p.l + W, p.t + sR * rh + rh/2); ctx.stroke();
     }
 }
-function chgD(v){ mulD+=v; if(mulD>60)mulD=6; if(mulD<6)mulD=60; sync(); }
+
+function chgD(v){ mulD += v; if(mulD > 60) mulD = 6; if(mulD < 6) mulD = 60; sync(); }
+function chgR(v){ sR = (sR + v + 60) % 60; sync(); }
+function chgC(v){ sC = (sC + v + 39) % 39; sync(); }
+function chgO(idx,v){ obs[idx-1] = (obs[idx-1] + v + 39) % 40; if(obs[idx-1]===0) obs[idx-1]=39; sync(); }
 function toggleReturn() {
-    if(!isRunning){isRunning=true; document.getElementById('reset-btn').classList.add('active');}
-    else{isRunning=false; document.getElementById('reset-btn').classList.remove('active'); mulD=6; sR=0; sC=0; sync();}
+    if(!isRunning){ isRunning=true; document.getElementById('reset-btn').classList.add('active'); }
+    else{ isRunning=false; document.getElementById('reset-btn').classList.remove('active'); mulD=6; sR=0; sC=0; sync(); }
 }
-function chgR(v){ sR=(sR+v+60)%60; sync(); }
-function chgC(v){ sC=(sC+v+39)%39; sync(); }
-function chgO(idx,v){ obs[idx-1]=(obs[idx-1]+v+39)%40; if(obs[idx-1]===0)obs[idx-1]=39; sync(); }
 function sync() {
-    document.getElementById('d-v').innerText=mulD.toString().padStart(2,'0');
-    document.getElementById('r-v').innerText=sR.toString().padStart(2,'0');
-    document.getElementById('c-v').innerText=(sC+1).toString().padStart(2,'0');
-    for(let i=1;i<=6;i++) document.getElementById(`o${i}-v`).innerText=obs[i-1].toString().padStart(2,'0');
+    document.getElementById('d-v').innerText = mulD.toString().padStart(2,'0');
+    document.getElementById('r-v').innerText = sR.toString().padStart(2,'0');
+    document.getElementById('c-v').innerText = (sC+1).toString().padStart(2,'0');
+    for(let i=1; i<=6; i++) document.getElementById(`o${i}-v`).innerText = obs[i-1].toString().padStart(2,'0');
     render();
 }
-setInterval(()=>{blk=!blk; render();}, 400); window.onresize=render; sync();
+setInterval(()=>{blk = !blk; render();}, 400); window.onresize = render; sync();
 </script>
 </body>
 </html>

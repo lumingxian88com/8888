@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>6線20-60死對位</title>
+  <title>539戰略終端-精準對位版</title>
   <style>
     body { margin:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family: monospace; }
     .container { display:flex; background:#000; border:1px solid #444; }
@@ -10,7 +10,8 @@
     .panel { width:80px; background:#111; padding:10px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:15px; }
     .group { background:#1a1a1a; padding:10px 5px; text-align:center; border-radius:4px; }
     button { width:100%; padding:12px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:22px; font-weight:bold; }
-    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; }
+    button:active { background:#f00; }
+    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; background:#000; }
     .label { font-size:16px; color:#888; }
   </style>
 </head>
@@ -28,48 +29,75 @@ const c = document.getElementById('chart');
 const ctx = c.getContext('2d');
 let blinkRow = 0, blinkCol = 0, blink = true;
 
+// 填入最近 6 天的數據 (由近到遠，對應 Day 1 到 Day 6)
+const dailyData = [
+  ["02","17","32","35","38"], // Day 1 (對應 60次)
+  ["06","13","22","23","27"], // Day 2 (對應 52次)
+  ["13","22","30","37","38"], // Day 3 (對應 44次)
+  ["03","04","20","25","28"], // Day 4 (對應 36次)
+  ["18","15","27","37","38"], // Day 5 (對應 28次)
+  ["08","11","13","37","38"]  // Day 6 (對應 20次)
+];
+
 function draw() {
-  c.height = 600; c.width = 900;
-  const pad = {l:120, r:40, t:60, b:80};
+  c.height = 700; c.width = 1000;
+  const pad = {l:120, r:40, t:80, b:80};
   const w = c.width - pad.l - pad.r;
   const h = c.height - pad.t - pad.b;
   const cw = w / 39;
-  const rh = h / 5; // 6條線產生5個等分間距
+  const rh = h / 5; // 6條線，5個間隔
 
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-  // 【核心：畫出六條橫線並對齊次數】
+  // 1. 繪製 6 條死對位橫線
   for(let i=0; i<6; i++) {
     let y = pad.t + i * rh;
-    // 第1條(i=0)是60，第6條(i=5)是20
-    let countVal = 60 - (i * 8); 
+    let countVal = 60 - (i * 8);
 
-    // 1. 繪製橫線
     ctx.strokeStyle = (i === 0 || i === 5) ? '#f00' : '#444';
     ctx.lineWidth = (i === 0 || i === 5) ? 2 : 1;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
 
-    // 2. 左邊標註次數 (60, 52, 44, 36, 28, 20)
+    // 次數標籤 (左切齊)
     ctx.fillStyle = (i === 0 || i === 5) ? '#f00' : '#fff';
-    ctx.font = 'bold 28px Arial'; 
-    ctx.textAlign = 'right';
+    ctx.font = 'bold 28px Arial'; ctx.textAlign = 'right';
     ctx.fillText(countVal, pad.l - 20, y + 10);
 
-    // 3. 左邊標註天數 (第1天到第6天)
-    ctx.fillStyle = '#666'; 
-    ctx.font = '14px Arial'; 
+    // 天數標籤
+    ctx.fillStyle = '#666'; ctx.font = '14px Arial';
     ctx.fillText("Day " + (i+1), pad.l - 85, y + 5);
+
+    // 2. 填入該天的號碼點
+    if(dailyData[i]) {
+      dailyData[i].forEach(numStr => {
+        let num = parseInt(numStr);
+        let x = pad.l + (num - 1) * cw + cw/2;
+        
+        // 點的樣式
+        ctx.beginPath();
+        ctx.arc(x, y, 15, 0, Math.PI*2);
+        ctx.fillStyle = '#f00';
+        ctx.fill();
+        
+        // 點內的文字
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(numStr, x, y);
+      });
+    }
   }
 
-  // 底部號碼 (01-39)
+  // 3. 底部 01-39 號碼
   for(let i=0; i<39; i++) {
     const x = pad.l + i * cw;
-    ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#555';
-    ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 45);
+    ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#666';
+    ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
+    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 50);
   }
 
-  // 閃爍掃描線
+  // 4. 閃爍掃描線 (全循環)
   if(blink) {
     const tx = pad.l + blinkCol * cw + cw/2;
     const ty = pad.t + blinkRow * rh;
@@ -80,7 +108,7 @@ function draw() {
   }
 }
 
-// 循環邏輯
+// 循環邏輯按鈕
 document.getElementById('r-inc').onclick = () => { blinkRow = (blinkRow + 1) % 6; sync(); };
 document.getElementById('r-dec').onclick = () => { blinkRow = (blinkRow - 1 + 6) % 6; sync(); };
 document.getElementById('c-inc').onclick = () => { blinkCol = (blinkCol + 1) % 39; sync(); };

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>539戰略終端-精準對位版</title>
+  <title>物理標尺鎖死版</title>
   <style>
     body { margin:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family: monospace; }
     .container { display:flex; background:#000; border:1px solid #444; }
@@ -10,8 +10,7 @@
     .panel { width:80px; background:#111; padding:10px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:15px; }
     .group { background:#1a1a1a; padding:10px 5px; text-align:center; border-radius:4px; }
     button { width:100%; padding:12px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:22px; font-weight:bold; }
-    button:active { background:#f00; }
-    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; background:#000; }
+    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; }
     .label { font-size:16px; color:#888; }
   </style>
 </head>
@@ -29,27 +28,23 @@ const c = document.getElementById('chart');
 const ctx = c.getContext('2d');
 let blinkRow = 0, blinkCol = 0, blink = true;
 
-// 填入最近 6 天的數據 (由近到遠，對應 Day 1 到 Day 6)
 const dailyData = [
-  ["02","17","32","35","38"], // Day 1 (對應 60次)
-  ["06","13","22","23","27"], // Day 2 (對應 52次)
-  ["13","22","30","37","38"], // Day 3 (對應 44次)
-  ["03","04","20","25","28"], // Day 4 (對應 36次)
-  ["18","15","27","37","38"], // Day 5 (對應 28次)
-  ["08","11","13","37","38"]  // Day 6 (對應 20次)
+  ["02","17","32","35","38"], // Day 1 = 60次
+  ["06","13","22","23","27"], // Day 2 = 52次
+  ["13","22","30","37","38"], // Day 3 = 44次
+  ["03","04","20","25","28"], // Day 4 = 36次
+  ["18","15","27","37","38"], // Day 5 = 28次
+  ["08","11","13","37","38"]  // Day 6 = 20次
 ];
 
 function draw() {
-  c.height = 700; c.width = 1000;
-  const pad = {l:120, r:40, t:80, b:80};
-  const w = c.width - pad.l - pad.r;
-  const h = c.height - pad.t - pad.b;
-  const cw = w / 39;
-  const rh = h / 5; // 6條線，5個間隔
+  c.height = 650; c.width = 950;
+  const pad = {l:120, r:40, t:60, b:80};
+  const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
+  const cw = w / 39, rh = h / 5; 
 
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
 
-  // 1. 繪製 6 條死對位橫線
   for(let i=0; i<6; i++) {
     let y = pad.t + i * rh;
     let countVal = 60 - (i * 8);
@@ -58,57 +53,38 @@ function draw() {
     ctx.lineWidth = (i === 0 || i === 5) ? 2 : 1;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
 
-    // 次數標籤 (左切齊)
     ctx.fillStyle = (i === 0 || i === 5) ? '#f00' : '#fff';
     ctx.font = 'bold 28px Arial'; ctx.textAlign = 'right';
     ctx.fillText(countVal, pad.l - 20, y + 10);
 
-    // 天數標籤
-    ctx.fillStyle = '#666'; ctx.font = '14px Arial';
-    ctx.fillText("Day " + (i+1), pad.l - 85, y + 5);
-
-    // 2. 填入該天的號碼點
     if(dailyData[i]) {
       dailyData[i].forEach(numStr => {
-        let num = parseInt(numStr);
-        let x = pad.l + (num - 1) * cw + cw/2;
-        
-        // 點的樣式
-        ctx.beginPath();
-        ctx.arc(x, y, 15, 0, Math.PI*2);
-        ctx.fillStyle = '#f00';
+        let x = pad.l + (parseInt(numStr)-1) * cw + cw/2;
+        ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI*2);
+        ctx.fillStyle = (parseInt(numStr)-1 === blinkCol && i === blinkRow && blink) ? '#fff' : '#f00';
         ctx.fill();
-        
-        // 點內的文字
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.fillStyle = (parseInt(numStr)-1 === blinkCol && i === blinkRow && blink) ? '#000' : '#fff';
+        ctx.font = 'bold 12px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(numStr, x, y);
       });
     }
   }
 
-  // 3. 底部 01-39 號碼
   for(let i=0; i<39; i++) {
     const x = pad.l + i * cw;
     ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#666';
-    ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 50);
+    ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 45);
   }
 
-  // 4. 閃爍掃描線 (全循環)
   if(blink) {
-    const tx = pad.l + blinkCol * cw + cw/2;
-    const ty = pad.t + blinkRow * rh;
     ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(tx, pad.t); ctx.lineTo(tx, pad.t + h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l+blinkCol*cw+cw/2, pad.t); ctx.lineTo(pad.l+blinkCol*cw+cw/2, pad.t+h); ctx.stroke();
     ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(pad.l + w, ty); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t+blinkRow*rh); ctx.lineTo(pad.l+w, pad.t+blinkRow*rh); ctx.stroke();
   }
 }
 
-// 循環邏輯按鈕
 document.getElementById('r-inc').onclick = () => { blinkRow = (blinkRow + 1) % 6; sync(); };
 document.getElementById('r-dec').onclick = () => { blinkRow = (blinkRow - 1 + 6) % 6; sync(); };
 document.getElementById('c-inc').onclick = () => { blinkCol = (blinkCol + 1) % 39; sync(); };

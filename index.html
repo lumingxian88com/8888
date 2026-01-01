@@ -3,18 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 全功能精密分析儀</title>
+    <title>539 專業精密分析儀 - 終極置頂版</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: "PingFang TC", sans-serif; overflow: hidden; display: flex; width: 100vw; height: 100vh; }
-        #canvas-wrap { flex: 1; height: 100vh; position: relative; background: radial-gradient(circle, #0a0a0a 0%, #000 100%); }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; display: flex; width: 100vw; height: 100vh; }
+        #canvas-wrap { flex-grow: 1; height: 100vh; position: relative; background: radial-gradient(circle, #0a0a0a 0%, #000 100%); }
         canvas { display: block; }
-        .panel { width: 170px; background: #0d0d0d; border-left: 2px solid #ff0000; display: flex; flex-direction: column; gap: 12px; padding: 15px; box-sizing: border-box; box-shadow: -5px 0 20px rgba(255,0,0,0.1); }
-        .card { background: #161616; border: 1px solid #333; border-radius: 12px; padding: 12px; text-align: center; }
-        .card label { font-size: 12px; color: #aaa; letter-spacing: 1px; }
-        .card .val { font-size: 28px; color: #00ff00; font-weight: 900; margin: 4px 0; font-family: monospace; text-shadow: 0 0 10px rgba(0,255,0,0.5); }
-        button { width: 100%; padding: 12px; margin: 4px 0; background: #222; color: #fff; border: 1px solid #ff0000; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.2s; }
-        button:active { background: #ff0000; transform: scale(0.95); }
-        .status { font-size: 10px; color: #666; text-align: center; margin-top: auto; border-top: 1px solid #222; padding-top: 10px; }
+        .panel { 
+            width: 160px; background: #0d0d0d; border-left: 2px solid #f00; 
+            display: flex; flex-direction: column; gap: 10px; padding: 12px; box-sizing: border-box;
+            box-shadow: -5px 0 20px rgba(255,0,0,0.2);
+        }
+        .ctrl-group { background: #161616; border: 1px solid #333; border-radius: 12px; padding: 10px; text-align: center; }
+        .ctrl-group label { font-size: 11px; color: #888; letter-spacing: 1px; }
+        .ctrl-group .val { font-size: 28px; color: #0f0; font-weight: 900; margin: 4px 0; font-family: monospace; }
+        button { 
+            width: 100%; padding: 12px; margin: 4px 0; background: #222; color: #fff; 
+            border: 1px solid #f00; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold;
+            transition: 0.1s;
+        }
+        button:active { background: #f00; transform: scale(0.95); }
+        .status { margin-top: auto; font-size: 10px; color: #444; text-align: center; border-top: 1px solid #222; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -22,106 +30,144 @@
 <div id="canvas-wrap"><canvas id="main"></canvas></div>
 
 <div class="panel">
-    <div class="card">
+    <div class="ctrl-group">
         <label>分析天數</label>
         <div id="disp-days" class="val">06</div>
-        <button onclick="adjDays(1)">天數 ▲</button>
-        <button onclick="adjDays(-1)">天數 ▼</button>
+        <button onclick="adjDays(1)">▲</button>
+        <button onclick="adjDays(-1)">▼</button>
     </div>
-    <div class="card">
+    <div class="ctrl-group">
         <label>橫向掃描</label>
-        <div id="disp-row" class="val">01</div>
-        <button onclick="adjRow(1)">日期 ▲</button>
-        <button onclick="adjRow(-1)">日期 ▼</button>
+        <div id="disp-row" class="val">00</div>
+        <button onclick="adjRow(1)">▲</button>
+        <button onclick="adjRow(-1)">▼</button>
     </div>
-    <div class="card">
+    <div class="ctrl-group">
         <label>縱向鎖定</label>
-        <div id="disp-col" class="val">01</div>
-        <button onclick="adjCol(1)">號碼 ▲</button>
-        <button onclick="adjCol(-1)">號碼 ▼</button>
+        <div id="disp-col" class="val">00</div>
+        <button onclick="adjCol(1)">▲</button>
+        <button onclick="adjCol(-1)">▼</button>
     </div>
-    <div class="status">SYSTEM: V5.0 CALIBRATED</div>
+    <div class="status">HIGH-PRECISION V6.0</div>
 </div>
 
 <script>
-// 精準數據源
-const FREQ = ["31","37","37","48","42","40","56","45","41","39","44","47","38","49","32","30","27","37","41","36","39","43","39","53","36","48","54","46","43","35","44","34","35","34","40","38","37"];
-const DATA = [["12/31",["08","10","11","26","35"]],["12/30",["11","12","24","27","33"]],["12/29",["05","10","13","29","37"]],["12/27",["01","15","19","28","38"]],["12/26",["01","10","20","27","36"]],["12/25",["14","18","28","36","39"]],["12/24",["02","03","14","25","30"]],["12/23",["09","22","24","30","35"]],["12/22",["02","22","24","27","38"]],["12/20",["01","05","16","35","38"]],["12/19",["12","16","23","27","30"]],["12/18",["04","09","32","33","36"]],["12/17",["05","06","07","19","32"]],["12/16",["02","10","14","33","35"]],["12/15",["03","17","27","29","38"]],["12/13",["02","09","21","31","38"]],["12/12",["10","24","26","28","35"]],["12/11",["02","06","17","25","26"]],["12/10",["04","07","11","16","26"]],["12/09",["07","08","15","30","39"]],["12/08",["05","23","27","28","31"]],["12/06",["06","22","23","24","32"]],["12/05",["02","03","16","17","29"]],["12/04",["01","07","20","25","37"]],["12/03",["05","09","14","33","35"]],["12/02",["02","05","08","13","29"]],["12/01",["02","03","04","20","24"]],["11/29",["08","27","30","33","36"]],["11/28",["08","13","14","22","28"]],["11/27",["07","19","22","25","28"]],["11/26",["07","13","26","28","34"]],["11/25",["09","30","36","38","39"]],["11/24",["02","04","05","17","31"]],["11/22",["10","13","32","33","37"]],["11/21",["05","10","17","28","35"]],["11/20",["01","05","33","36","38"]],["11/19",["03","11","20","28","31"]],["11/18",["14","24","31","36","37"]],["11/17",["04","07","16","26","29"]],["11/15",["12","20","25","28","29"]],["11/14",["02","11","15","37","38"]],["11/13",["13","18","20","23","36"]],["11/12",["01","04","09","14","22"]],["11/11",["05","19","31","34","39"]],["11/10",["07","14","15","17","30"]],["11/08",["07","08","09","26","34"]],["11/07",["22","27","30","32","37"]],["11/06",["07","24","28","31","32"]],["11/05",["11","14","15","27","39"]],["11/04",["01","07","12","29","39"]],["11/03",["24","25","34","36","37"]],["11/01",["08","12","19","27","28"]],["10/31",["11","18","25","26","33"]],["10/30",["05","27","28","31","37"]],["10/29",["26","32","33","36","39"]],["10/28",["18","20","25","29","31"]],["10/27",["03","20","26","31","37"]],["10/25",["03","04","11","21","34"]],["10/24",["08","11","13","37","38"]],["10/23",["08","15","27","37","38"]]];
+// 數據與設定
+const rawData = [[1,15,19,28,38],[1,10,20,27,36],[14,18,28,36,39],[2,3,14,25,30],[9,22,24,30,35],[2,22,24,27,38],[1,5,16,35,38],[12,16,23,27,30],[4,9,32,33,36],[5,6,7,19,32],[2,10,14,33,35],[3,17,27,29,38],[2,9,21,31,38],[10,24,26,28,35],[2,6,17,25,26],[4,7,11,16,26],[7,8,15,30,39],[5,23,27,28,31],[6,22,23,24,32],[2,3,16,17,29],[1,7,20,25,37],[5,9,14,33,35],[2,5,8,13,29],[2,3,4,20,24],[8,27,30,33,36],[8,13,14,22,28],[7,19,22,25,28],[8,6,12,22,34],[9,30,36,38,39],[2,4,5,17,31],[10,13,32,33,37],[5,10,17,28,35],[1,5,33,36,38],[3,11,20,28,31],[14,24,31,36,37],[4,7,16,16,29],[12,20,25,28,29],[2,11,15,37,38],[13,18,20,23,36],[1,4,9,14,22],[5,19,31,34,39],[7,14,15,17,30],[7,8,9,26,34],[22,27,30,32,37],[7,24,28,31,32],[11,14,15,27,39],[1,7,12,29,39],[24,25,34,36,37],[8,12,19,27,28],[11,18,25,26,33],[5,27,28,31,37],[26,32,33,36,39],[18,20,25,29,31],[3,20,26,31,37],[3,4,11,21,34],[8,11,13,37,38],[18,15,27,37,38],[3,4,20,25,28],[13,22,30,37,38],[6,13,22,23,27],[2,17,32,35,38]];
+const yearFreq = [31,37,37,48,41,40,56,44,41,37,42,46,37,49,32,30,27,37,41,36,39,43,39,52,36,47,53,46,42,35,44,34,34,34,39,38,36,46,39];
+const gameDates = (()=>{let d=[],c=new Date("2025-12-27");while(d.length<100){if(c.getDay()!==0)d.push(`${(c.getMonth()+1).toString().padStart(2,'0')}/${c.getDate().toString().padStart(2,'0')}`);c.setDate(c.getDate()-1);}return d;})();
 
 const canvas = document.getElementById('main'), ctx = canvas.getContext('2d');
 let daysMult = 1, selRow = 0, selCol = 0, flash = true;
 
 function render() {
-    canvas.width = window.innerWidth - 170;
+    canvas.width = window.innerWidth - 160;
     canvas.height = window.innerHeight;
-    const viewDays = daysMult * 6, pad = {l:85, r:30, t:60, b:80};
+    const showDays = daysMult * 6;
+    const pad = {l: 75, r: 30, t: 15, b: 70}; // 精簡 top 讓內容置頂
     const W = canvas.width - pad.l - pad.r, H = canvas.height - pad.t - pad.b;
-    const cw = W / 39, rh = H / 59; // 59 intervals = 60 lines
+    const cw = W / 39, rh = H / showDays;
 
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // 1. 背景號碼軌道
+    // 1. 底層 60/20 刻度文字
+    ctx.fillStyle = '#f00'; ctx.font = 'bold 24px Arial'; ctx.textAlign='right';
+    ctx.fillText("60", pad.l-10, pad.t + 20);
+    ctx.fillText("20", pad.l-10, pad.t + H);
+
+    // 2. 藍色長條圖 (次數分析)
     for(let i=0; i<39; i++) {
         const x = pad.l + i * cw;
-        const v = parseInt(FREQ[i]) || 0;
-        const barH = ((Math.min(v, 60) - 20) / 40) * H;
+        let val = yearFreq[i] || 0;
+        let barH = ((Math.max(20, Math.min(val, 60)) - 20) / 40) * H;
         
         if (i === selCol && flash) {
-            ctx.fillStyle = 'rgba(0, 255, 0, 0.12)';
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.15)';
             ctx.fillRect(x, pad.t, cw, H);
         }
-        ctx.fillStyle = (i === selCol && flash) ? '#0ff' : 'rgba(0, 100, 255, 0.35)';
-        ctx.fillRect(x + 2, pad.t + H - Math.max(0, barH), cw - 4, Math.max(0, barH));
-        
+        ctx.fillStyle = (i === selCol && flash) ? '#0ff' : 'rgba(0, 100, 255, 0.4)';
+        ctx.fillRect(x + 2, pad.t + H - barH, cw - 4, barH);
+
+        // 次數數字
+        ctx.fillStyle = (i === selCol && flash) ? '#fff' : '#0ff';
+        ctx.font = 'bold 12px Arial'; ctx.textAlign='center';
+        ctx.fillText(val, x + cw/2, pad.t + H - barH - 5);
+
+        // 號碼標籤 (固定在最底)
         ctx.fillStyle = (i === selCol) ? '#0f0' : '#888';
-        ctx.font = 'bold 15px monospace'; ctx.textAlign = 'center';
+        ctx.font = 'bold 16px Arial';
         ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + H + 35);
     }
 
-    // 2. 60 條精密線與刻度鎖定
-    for(let r=0; r<60; r++) {
-        const y = pad.t + r * rh;
-        const active = r < viewDays;
+    // 3. 橫向橫線與日期點位
+    for(let r=0; r<showDays; r++) {
+        const y = pad.t + r * rh + rh/2;
+        const isSel = (r === selRow && flash);
 
-        if (r === 0) { // 60次刻度
-            ctx.fillStyle = '#f00'; ctx.font = '900 24px monospace'; ctx.textAlign = 'right';
-            ctx.fillText("60", pad.l - 15, y + 8);
-        } else if (r === 59) { // 20次刻度
-            ctx.fillStyle = '#f00'; ctx.font = '900 24px monospace'; ctx.textAlign = 'right';
-            ctx.fillText("20", pad.l - 15, y + 8);
-        }
-
-        ctx.strokeStyle = (r === selRow && flash) ? '#f00' : (active ? '#333' : '#111');
-        ctx.lineWidth = (r === selRow && flash) ? 3 : 1;
+        // 背景橫線
+        ctx.strokeStyle = isSel ? '#f00' : '#222';
+        ctx.lineWidth = isSel ? 2 : 1;
         ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + W, y); ctx.stroke();
 
-        if (active && DATA[r]) {
-            ctx.fillStyle = (r === selRow && flash) ? '#f00' : '#555';
-            ctx.font = '12px monospace'; ctx.textAlign = 'right';
-            ctx.fillText(DATA[r][0], pad.l - 10, y + 4);
+        // 日期文字
+        ctx.fillStyle = isSel ? '#f00' : '#666';
+        ctx.font = 'bold 12px Arial'; ctx.textAlign = 'right';
+        ctx.fillText(gameDates[r] || "", pad.l - 10, y + 5);
 
-            DATA[r][1].forEach(nStr => {
-                const n = parseInt(nStr), x = pad.l + (n-1) * cw + cw/2;
-                const isHit = (r === selRow || n-1 === selCol);
-                ctx.fillStyle = (isHit && flash) ? '#fff' : '#f00';
-                ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = (isHit && flash) ? '#000' : '#fff';
-                ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(nStr, x, y);
+        // 五個開獎點
+        if(rawData[r]) {
+            rawData[r].forEach(n => {
+                const x = pad.l + (n-1)*cw + cw/2;
+                const dotOnRow = (r === selRow), dotOnCol = (n-1 === selCol);
+                const dotFlash = (dotOnRow || dotOnCol) && flash;
+
+                ctx.save();
+                let dotR = Math.min(cw/2.2, rh/2.2);
+                ctx.fillStyle = (dotOnRow && dotOnCol && flash) ? '#fff' : (dotFlash ? '#f00' : '#400000');
+                ctx.beginPath(); ctx.arc(x, y, dotR, 0, Math.PI*2); ctx.fill();
+                
+                ctx.fillStyle = (dotOnRow && dotOnCol && flash) ? '#000' : '#fff';
+                ctx.font = `bold ${dotR*1.3}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText(n.toString().padStart(2,'0'), x, y);
+                ctx.restore();
             });
         }
     }
+
+    // 4. 縱向閃爍線
+    if(flash) {
+        ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(pad.l + selCol*cw + cw/2, pad.t); ctx.lineTo(pad.l + selCol*cw + cw/2, pad.t + H); ctx.stroke();
+    }
 }
 
+// 控制引擎
 function adjDays(v) { daysMult = Math.max(1, Math.min(10, daysMult + v)); update(); }
-function adjRow(v) { const m = daysMult * 6; selRow = (selRow + v + m) % m; update(); }
+function adjRow(v) { const limit = daysMult * 6; selRow = (selRow + v + limit) % limit; update(); }
 function adjCol(v) { selCol = (selCol + v + 39) % 39; update(); }
+
 function update() {
     document.getElementById('disp-days').innerText = (daysMult * 6).toString().padStart(2,'0');
-    document.getElementById('disp-row').innerText = (selRow + 1).toString().padStart(2,'0');
-    document.getElementById('disp-col').innerText = (selCol + 1).toString().padStart(2,'0');
+    document.getElementById('disp-row').innerText = selRow.toString().padStart(2,'0');
+    document.getElementById('disp-col').innerText = selCol.toString().padStart(2,'0');
     render();
 }
+
+// 觸控座標換算
+canvas.addEventListener('touchstart', (e)=>{
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+    const showDays = daysMult * 6, pad = {l: 75, r: 30, t: 15, b: 70};
+    const W = canvas.width - pad.l - pad.r, H = canvas.height - pad.t - pad.b;
+    
+    let c = Math.floor((x - pad.l) / (W/39));
+    let r = Math.floor((y - pad.t) / (H/showDays));
+    if(c >= 0 && c < 39) selCol = c;
+    if(r >= 0 && r < showDays) selRow = r;
+    update();
+}, {passive: false});
 
 setInterval(() => { flash = !flash; render(); }, 400);
 window.onresize = render;

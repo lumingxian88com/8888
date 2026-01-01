@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 戰略終端 - 範本回歸</title>
+    <title>539 戰略終端 - 座標對位版</title>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: monospace; overflow: hidden; display: flex; }
         #canvas-wrap { flex: 1; height: 100vh; position: relative; }
@@ -36,7 +36,6 @@
     <div class="group obs"><div class="label">TRK F</div><div id="o6-v" class="val">03</div><div class="btn-row"><button onclick="chgO(6,-1)">▼</button><button onclick="chgO(6,1)">▲</button></div></div>
 </div>
 <script>
-const F = [31,37,37,48,41,40,56,44,41,37,42,46,37,49,32,30,27,37,41,36,39,43,39,52,36,47,53,46,42,35,44,34,34,34,39,38,36,46,39];
 const D = Array.from({length: 61}, () => Array.from({length: 5}, () => Math.floor(Math.random() * 39) + 1));
 const dates = (()=>{let d=[],c=new Date("2026-01-01");while(d.length<100){if(c.getDay()!==0)d.push(`${(c.getMonth()+1)}/${c.getDate()}`);c.setDate(c.getDate()-1);}return d;})();
 const cvs = document.getElementById('main'), ctx = cvs.getContext('2d');
@@ -44,42 +43,53 @@ let mulD = 6, sR = 0, sC = 0, obs = [10, 22, 7, 1, 2, 3], blk = true, isRunning 
 
 function render() {
     cvs.width = window.innerWidth - 230; cvs.height = window.innerHeight;
-    const p = {l: 95, r: 35, t: 30, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
-    const cw = W / 39, rh = H / 60;
+    const p = {l: 110, r: 35, t: 40, b: 85}, W = cvs.width - p.l - p.r, H = cvs.height - p.t - p.b;
+    const cw = W / 39, rh = H / 59; // 59個間隔對應60天
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
 
-    // 【關鍵修正】強制所有左側標籤垂直對準 p.l - 20
-    const xBase = p.l - 20;
+    const xPos = p.l - 20;
 
-    ctx.fillStyle = '#f00'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'right';
-    ctx.fillText("60", xBase, p.t + 10);
-    ctx.fillText("20", xBase, p.t + 59*rh + 5);
-
-    for(let r=0; r<=60; r++) {
-        let y = p.t + r * rh, isStp = (r > 0 && r % 6 === 0);
-        ctx.strokeStyle = isStp ? '#f00' : (r < mulD ? '#222' : '#0a0a0a');
-        ctx.lineWidth = isStp ? 2 : 1;
-        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l+W, y); ctx.stroke();
+    // 繪製座標
+    for(let r=0; r<60; r++) {
+        let y = p.t + r * rh;
+        let dayNum = r + 1;
+        let isStep = (dayNum % 6 === 0 || dayNum === 1 || dayNum === 60);
         
-        if(isStp) {
-            ctx.fillStyle = '#f00'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'right';
-            ctx.fillText(r.toString().padStart(2,'0'), xBase, y + 6);
+        ctx.strokeStyle = (dayNum === 1 || dayNum === 60) ? '#f00' : (isStep ? '#444' : '#111');
+        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l+W, y); ctx.stroke();
+
+        if(isStep) {
+            ctx.textAlign = 'right';
+            // 第一天對齊 60
+            if(dayNum === 1) {
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
+                ctx.fillText("60", xPos, y + 8);
+                ctx.fillStyle = '#f00'; ctx.font = '12px Arial';
+                ctx.fillText("1", xPos - 35, y + 6);
+            } 
+            // 最後一天對齊 20
+            else if(dayNum === 60) {
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
+                ctx.fillText("20", xPos, y + 8);
+                ctx.fillStyle = '#f00'; ctx.font = '12px Arial';
+                ctx.fillText("60", xPos - 35, y + 6);
+            }
+            // 中間倍數標記
+            else {
+                ctx.fillStyle = '#666'; ctx.font = 'bold 14px Arial';
+                ctx.fillText(dayNum.toString(), xPos - 35, y + 5);
+            }
         }
+
         if(r < mulD) {
-            ctx.fillStyle = '#555'; ctx.font = '11px Arial'; ctx.textAlign = 'right';
-            ctx.fillText(dates[r]||"", p.l-45, y+5);
+            ctx.fillStyle = '#444'; ctx.font = '10px Arial'; ctx.textAlign = 'right';
+            ctx.fillText(dates[r]||"", p.l-70, y+4);
             if(D[r]) D[r].forEach(n => {
                 let x=p.l+(n-1)*cw+cw/2, act=(r===sR&&n-1===sC&&blk);
-                ctx.fillStyle=act?'#fff':(obs.includes(n)?'#00dfff':(n-1===sC&&blk?'#f00':'#400000'));
-                ctx.beginPath(); ctx.arc(x,y,Math.min(cw,rh)/2.3,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle=(obs.includes(n)||act)?'#000':'#fff';
-                ctx.font='bold 10px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(n.toString().padStart(2,'0'),x,y);
+                ctx.fillStyle=act?'#fff':(obs.includes(n)?'#00dfff':(n-1===sC&&blk?'#f00':'#300'));
+                ctx.beginPath(); ctx.arc(x,y,Math.min(cw,rh)/2.5,0,Math.PI*2); ctx.fill();
             });
         }
-    }
-    if(blk) {
-        ctx.strokeStyle='#0f0'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(p.l+sC*cw+cw/2, p.t); ctx.lineTo(p.l+sC*cw+cw/2, p.t+60*rh); ctx.stroke();
     }
 }
 function chgD(v){ mulD+=v; if(mulD>60)mulD=6; if(mulD<6)mulD=60; sync(); }

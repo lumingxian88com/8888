@@ -1,126 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>物理死對位-戰略終端</title>
-  <script src="https://lumingxian88com.github.io/8888888/"></script>
-  <style>
-    body { margin:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family: monospace; }
-    .container { display:flex; background:#000; border:1px solid #444; }
-    canvas { background:#000; }
-    .panel { width:80px; background:#111; padding:10px; border-left:2px solid #f00; display:flex; flex-direction:column; gap:15px; }
-    .group { background:#1a1a1a; padding:10px 5px; text-align:center; border-radius:4px; }
-    button { width:100%; padding:12px 0; background:#222; color:#fff; border:1px solid #f00; cursor:pointer; font-size:22px; font-weight:bold; }
-    .value { font-size:24px; color:#0f0; font-weight:900; margin:5px 0; border:1px solid #fff; background:#000; }
-    .label { font-size:16px; color:#888; }
-  </style>
+    <meta charset="UTF-8">
+    <script src="https://lumingxian88com.github.io/88/index.html"></script>
 </head>
-<body>
-<div class="container">
-  <canvas id="chart"></canvas>
-  <div class="panel">
-    <div class="group"><div class="label">天線</div><button id="r-inc">▲</button><div id="val-r" class="value">1</div><button id="r-dec">▼</button></div>
-    <div class="group"><div class="label">號線</div><button id="c-inc">▲</button><div id="val-c" class="value">1</div><button id="c-dec">▼</button></div>
-  </div>
-</div>
+<body style="background:#000; color:#fff;">
 
-<script>
-const c = document.getElementById('chart');
-const ctx = c.getContext('2d');
-let blinkRow = 0, blinkCol = 0, blink = true;
+    <h2>我的 8888 顯示站</h2>
+    <hr>
 
-// 年度頻率數據
-const yearFreq = ["31","37","37","48","42","40","56","45","41","39","44","47","38","49","32","30","27","37","41","36","39","43","39","53","36","48","54","46","43","35","44","34","35","34","40","38","37"];
+    <p>日期：<script>document.write(myday[0] + myday[1])</script></p>
 
-// 最近 6 天開獎號碼 (對位 Day 1 到 Day 6)
-const dailyData = [
-  ["02","17","32","35","38"], // Day 1 (60次線)
-  ["06","13","22","23","27"], // Day 2 (52次線)
-  ["13","22","30","37","38"], // Day 3 (44次線)
-  ["03","04","20","25","28"], // Day 4 (36次線)
-  ["18","15","27","37","38"], // Day 5 (28次線)
-  ["08","11","13","37","38"]  // Day 6 (20次線)
-];
+    <p>號碼：<script>document.write(myday[2])</script></p>
 
-function draw() {
-  c.height = 700; c.width = 1000;
-  const pad = {l:120, r:40, t:80, b:100};
-  const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
-  const cw = w / 39, rh = h / 5; // 5格分攤 40次數
+    <p>統計次數：<br>
+       <script>document.write(times.join(' , '))</script>
+    </p>
 
-  ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
-
-  // 1. 繪製年度藍條 (根據 20-60 物理尺標長高)
-  for(let i=0; i<39; i++) {
-    const x = pad.l + i * cw;
-    let val = parseInt(yearFreq[i]) || 0;
-    // 物理映射：底部是 20，頂部是 60，落差 40
-    let barH = ((Math.max(20, Math.min(val, 60)) - 20) / 40) * h;
-    
-    ctx.fillStyle = (i === blinkCol) ? 'rgba(0, 255, 255, 0.6)' : 'rgba(0, 150, 255, 0.3)';
-    ctx.fillRect(x + 2, pad.t + h - barH, cw - 4, barH);
-    
-    // 標註藍條數值
-    ctx.fillStyle = (i === blinkCol) ? '#0ff' : '#0077aa';
-    ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(val, x + cw/2, pad.t + h - barH - 10);
-  }
-
-  // 2. 繪製 6 條死對位物理線與數據點
-  for(let i=0; i<6; i++) {
-    let y = pad.t + i * rh;
-    let countVal = 60 - (i * 8);
-
-    ctx.strokeStyle = (i === 0 || i === 5) ? '#f00' : '#444';
-    ctx.lineWidth = (i === 0 || i === 5) ? 2 : 1;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y); ctx.stroke();
-
-    ctx.fillStyle = (i === 0 || i === 5) ? '#f00' : '#fff';
-    ctx.font = 'bold 28px Arial'; ctx.textAlign = 'right';
-    ctx.fillText(countVal, pad.l - 20, y + 10);
-
-    if(dailyData[i]) {
-      dailyData[i].forEach(numStr => {
-        let x = pad.l + (parseInt(numStr)-1) * cw + cw/2;
-        ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2);
-        ctx.fillStyle = (parseInt(numStr)-1 === blinkCol && i === blinkRow && blink) ? '#fff' : '#f00';
-        ctx.fill();
-        ctx.fillStyle = (parseInt(numStr)-1 === blinkCol && i === blinkRow && blink) ? '#000' : '#fff';
-        ctx.font = 'bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(numStr, x, y);
-      });
-    }
-  }
-
-  // 3. 底部號碼
-  for(let i=0; i<39; i++) {
-    const x = pad.l + i * cw;
-    ctx.fillStyle = (i === blinkCol) ? '#0f0' : '#666';
-    ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
-    ctx.fillText((i+1).toString().padStart(2,'0'), x + cw/2, pad.t + h + 50);
-  }
-
-  // 4. 閃爍掃描線
-  if(blink) {
-    ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(pad.l+blinkCol*cw+cw/2, pad.t); ctx.lineTo(pad.l+blinkCol*cw+cw/2, pad.t+h); ctx.stroke();
-    ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(pad.l, pad.t+blinkRow*rh); ctx.lineTo(pad.l+w, pad.t+blinkRow*rh); ctx.stroke();
-  }
-}
-
-document.getElementById('r-inc').onclick = () => { blinkRow = (blinkRow + 1) % 6; sync(); };
-document.getElementById('r-dec').onclick = () => { blinkRow = (blinkRow - 1 + 6) % 6; sync(); };
-document.getElementById('c-inc').onclick = () => { blinkCol = (blinkCol + 1) % 39; sync(); };
-document.getElementById('c-dec').onclick = () => { blinkCol = (blinkCol - 1 + 39) % 39; sync(); };
-
-function sync() { 
-  document.getElementById('val-r').textContent = blinkRow + 1;
-  document.getElementById('val-c').textContent = blinkCol + 1;
-  draw(); 
-}
-setInterval(() => { blink = !blink; draw(); }, 400);
-sync();
-</script>
 </body>
 </html>
